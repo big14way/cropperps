@@ -28,6 +28,21 @@ module.exports = {
       gasPrice: 25000000000,
     },
   },
+  etherscan: {
+    apiKey: {
+      avalancheFujiTestnet: "routescan",
+    },
+    customChains: [
+      {
+        network: "avalancheFujiTestnet",
+        chainId: 43113,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan",
+          browserURL: "https://testnet.snowtrace.io",
+        },
+      },
+    ],
+  },
   paths: {
     sources: "./contracts",
     tests: "./test",

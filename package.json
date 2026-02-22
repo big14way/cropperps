@@ -7,6 +7,7 @@
     "test": "npx hardhat test",
     "deploy:fuji": "npx hardhat run scripts/deploy.js --network fuji",
     "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "keeper": "npx hardhat run scripts/keeper.js --network fuji",
     "node": "npx hardhat node"
   },
   "devDependencies": {
