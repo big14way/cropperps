@@ -1,6 +1,6 @@
 # 🌾 CropPerps — Perpetuals DEX for African Agricultural Commodities
 
-> **Avalanche Build Games 2026** | Built by Gwill · EarnX Protocol · Lagos, Nigeria
+> **Avalanche Build Games 2026** | Built by Gwill · Lagos, Nigeria
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Network: Avalanche Fuji](https://img.shields.io/badge/Network-Avalanche%20Fuji-E84142)](https://testnet.snowtrace.io)
@@ -70,6 +70,7 @@ A cocoa farmer in Lagos can go long COCOA before harvest to lock in a favorable 
 | `CropVault.sol` | LP liquidity pool — USDT in, `CROP-LP` ERC20 out |
 | `CommodityOracle.sol` | Chainlink AggregatorV3Interface-compatible price feed |
 | `MockUSDT.sol` | Testnet USDT with public faucet (10,000 USDT per call) |
+| `MockAUSD.sol` | Testnet Agora AUSD with public faucet (10,000 AUSD per call) |
 
 ### Trading Mechanics
 
@@ -89,7 +90,7 @@ A cocoa farmer in Lagos can go long COCOA before harvest to lock in a favorable 
 - LP token price = Total USDT in vault / Total CROP-LP supply
 - Trading fees (open + close + borrow) flow into vault → LP value increases over time
 - Max vault utilization: 80% (20% always free to pay winning traders)
-- CROP-LP tokens are ERC20 — compatible with **Suzaku staking** for additional SUZ rewards
+- CROP-LP tokens are standard ERC20 — composable with any DeFi staking protocol
 
 ---
 
@@ -104,11 +105,11 @@ A cocoa farmer in Lagos can go long COCOA before harvest to lock in a favorable 
 
 All price data flows through the same `getPrice(commodityId)` interface regardless of source — the trading engine never changes.
 
-### Tether WDK
-All positions use **USDT** as collateral and settlement currency. `MockUSDT.sol` mirrors real USDT exactly (6 decimals, same transfer interface). On mainnet, the contract address is swapped to the real Tether USDT on Avalanche C-Chain (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`). The frontend is built for Tether WDK's payment integration to enable in-app USDT onramp directly from mobile.
+### Tether USDT
+All positions use **USDT** as primary collateral and settlement currency. `MockUSDT.sol` mirrors real USDT exactly (6 decimals, same transfer interface). On mainnet, the contract address is swapped to the real Tether USDT on Avalanche C-Chain (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`).
 
-### Suzaku
-`CROP-LP` is a standard ERC20 token, making it natively composable with Suzaku's staking framework. LPs deposit USDT → receive CROP-LP → stake CROP-LP in Suzaku → earn **trading fees + SUZ staking rewards simultaneously**. This creates a flywheel: higher LP yields → more vault liquidity → tighter spreads → more traders → higher fees → higher LP yields.
+### Agora AUSD
+The vault accepts **Agora AUSD** as a second collateral option alongside USDT. AUSD is a fully-backed digital dollar by Agora Finance (backed by Paradigm & Dragonfly), with reserves managed by VanEck and custodied at State Street. AUSD deposits (18 decimals) are normalized to 6-decimal USDT equivalents for LP math. `MockAUSD.sol` is used on testnet; on mainnet, swap to the real Agora AUSD address on Avalanche.
 
 ---
 
@@ -284,8 +285,7 @@ cropperps/
 │   ├── CropVault.sol          # LP vault (ERC20 CROP-LP)
 │   ├── CommodityOracle.sol    # Chainlink-compatible oracle
 │   ├── MockUSDT.sol           # Testnet USDT with faucet
-│   └── interfaces/
-│       └── AggregatorV3Interface.sol
+│   └── MockAUSD.sol           # Testnet Agora AUSD with faucet
 ├── scripts/
 │   └── deploy.js              # Full deployment + auto config writer
 ├── test/
@@ -312,7 +312,7 @@ Before mainnet:
 - [ ] Deploy Chainlink Functions consumer to replace manual oracle updates
 - [ ] Uncomment staleness check in `CommodityOracle.getPrice()` (2-hour threshold)
 - [ ] Transfer oracle ownership to multisig (Gnosis Safe)
-- [ ] Register `CROP-LP` token with Suzaku staking framework
+- [ ] Swap `MockAUSD` for real Agora AUSD on Avalanche mainnet
 - [ ] Run Slither static analysis: `slither .`
 - [ ] Get Certik or Code4rena audit before seeding significant TVL
 - [ ] Set up Chainlink Automation for hourly borrow fee accrual
@@ -322,11 +322,11 @@ Before mainnet:
 
 ## 🙏 Acknowledgements
 
-Built by **Gwill** ([@your_twitter](https://twitter.com)) — blockchain engineer, EarnX Protocol founder, Lagos Nigeria.
+Built by **Gwill** ([@your_twitter](https://twitter.com)) — blockchain engineer, Lagos Nigeria.
 
 6x international hackathon winner across Hedera, Solana, Starknet, Flare, and Cronos ecosystems. Building trade finance and commodity infrastructure for African markets since 2022.
 
-**Partners:** Chainlink · Tether WDK · Suzaku · Avalanche
+**Partners:** Chainlink · Tether · Agora AUSD · Avalanche
 
 ---
 
