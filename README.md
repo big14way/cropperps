@@ -1,45 +1,58 @@
-# 🌾 CropPerps — Perpetuals DEX for African Agricultural Commodities
+# CropPerps — Perpetuals DEX for African Agricultural Commodities
 
-> **Avalanche Build Games 2026** | Built by Gwill · Lagos, Nigeria
+> **Avalanche Build Games 2026** | Built by Gwill, Lagos, Nigeria
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live App](https://img.shields.io/badge/Live-cropperps.vercel.app-00C853)](https://cropperps.vercel.app)
 [![Network: Avalanche Fuji](https://img.shields.io/badge/Network-Avalanche%20Fuji-E84142)](https://testnet.snowtrace.io)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.26-blue)](https://soliditylang.org)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.26-363636)](https://soliditylang.org)
+[![Tests](https://img.shields.io/badge/Tests-27%20passing-00C853)](test/CropPerps.test.js)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Live App:** https://cropperps.vercel.app
+**GitHub:** https://github.com/big14way/cropperps
 
 ---
 
-## 🔥 The Problem
+## The Problem
 
-**Africa produces the world's commodities. African traders cannot hedge them.**
+Africa produces 75% of the world's cocoa and drives $400B+ in agricultural exports annually. Yet African commodity traders have **zero access to on-chain derivatives**.
 
-Nigeria is the world's 4th-largest cocoa producer. West Africa produces **75% of global cocoa supply**. Sub-Saharan Africa grows 60% of the world's uncultivated arable land and drives $400B+ in agricultural exports annually.
+- **CME and ICE futures** require US/UK brokerage accounts, $10K+ minimums, and institutional clearinghouse access
+- **No on-chain price discovery** — a cocoa farmer in Nigeria cannot hedge harvest prices, short a glut, or speculate on the commodity they know best
+- **Zero DeFi commodity exposure** — you can trade BTC and ETH perps in seconds, but COCOA and PALM OIL don't exist anywhere on-chain
+- **Currency risk** compounds losses — Nigerian exporters invoice in USD but earn in NGN, losing 20-40% to FX slippage even when the trade is correct
 
-Yet every single one of these producers and traders faces the same brutal reality:
-
-- **No access to commodity derivatives.** CME, ICE, and Bursa Malaysia are gated behind brokerage accounts requiring US/UK addresses, $10K+ minimums, and institutional clearinghouse access.
-- **No price discovery tool.** A cocoa farmer in Cross River State, Nigeria has no on-chain way to lock in a forward price for their harvest, hedge against a price crash, or speculate on the commodity they know best.
-- **Zero DeFi liquidity for commodity exposure.** You can trade BTC, ETH, and SOL perps on-chain in seconds. You cannot trade COCOA or PALM OIL anywhere on-chain — despite Africa's entire economy depending on these prices.
-- **Currency risk compounds the problem.** Nigerian exporters invoice in USD but earn in NGN. Between delayed commodity settlements and naira devaluation, a trader can be correct on the commodity and still lose 20–40% to FX slippage.
-
-The existing solutions — commodity ETFs, traditional futures brokers, structured notes — are slow, expensive, require KYC, and are entirely inaccessible from mobile-first markets like Nigeria, Ghana, and Côte d'Ivoire.
-
-**The result: Africa's commodity producers are price-takers, never price-setters. They absorb global price risk with no tools to manage it.**
+Africa's commodity producers are price-takers. CropPerps makes them price-setters.
 
 ---
 
-## 💡 The Solution
+## The Solution
 
-**CropPerps is a decentralized perpetuals exchange for African agricultural commodities, built on Avalanche.**
+**CropPerps** is a decentralized perpetuals exchange for African agricultural commodities on Avalanche.
 
-Any wallet. No KYC. No minimum account size. Open a leveraged long or short position on COCOA, PALM OIL, MAIZE, or SOYBEAN in one transaction using USDT as collateral.
+Any wallet. No KYC. No minimum. Open a leveraged long or short on **COCOA, PALM OIL, MAIZE, or SOYBEAN** in one transaction, settled in USDT.
 
-A cocoa farmer in Lagos can go long COCOA before harvest to lock in a favorable price. A palm oil importer in Kano can short PALMOIL to hedge inventory risk. A crypto-native trader in Accra can speculate on commodity price movements they have real-world insight into — the same way traders in Chicago have done for 150 years, but on-chain, permissionless, and at $0.02 gas.
-
-**CropPerps makes Africa's commodity markets globally accessible — and makes global commodity markets locally tradeable across Africa.**
+A cocoa farmer in Lagos hedges before harvest. A palm oil importer in Kano shorts to manage inventory risk. A trader in Accra speculates on commodity prices with real-world insight — the same tools Wall Street has had for 150 years, now permissionless on Avalanche at $0.02 gas.
 
 ---
 
-## 🏗️ How It Works
+## Live Deployment (Avalanche Fuji Testnet)
+
+All contracts are **verified on Snowtrace** — click any address to view source code on-chain.
+
+| Contract | Address | Verified |
+|----------|---------|----------|
+| CropPerps (Trading Engine) | [`0xda2057b0d68503E38C4FFbd74DF163073b1eD80b`](https://testnet.snowtrace.io/address/0xda2057b0d68503E38C4FFbd74DF163073b1eD80b#code) | Yes |
+| CropVault (LP Pool) | [`0x2D633Eb5371b00e1459a26FAd237d255bdbb7560`](https://testnet.snowtrace.io/address/0x2D633Eb5371b00e1459a26FAd237d255bdbb7560#code) | Yes |
+| CommodityOracle | [`0x631100C996aBFea0d81233D4DF446a816E124C97`](https://testnet.snowtrace.io/address/0x631100C996aBFea0d81233D4DF446a816E124C97#code) | Yes |
+| MockUSDT (Testnet) | [`0x0477BeD86FeA5c4c0ae4bC3AAdbEe42D76273e22`](https://testnet.snowtrace.io/address/0x0477BeD86FeA5c4c0ae4bC3AAdbEe42D76273e22#code) | Yes |
+| MockAUSD (Testnet) | [`0x122b9C153c7AB589465505f01E8bdA66552f768D`](https://testnet.snowtrace.io/address/0x122b9C153c7AB589465505f01E8bdA66552f768D#code) | Yes |
+
+**Chainlink AVAX/USD Feed:** [`0x5498BB86BC934c8D34FDA08E81D444153d0D06aD`](https://testnet.snowtrace.io/address/0x5498BB86BC934c8D34FDA08E81D444153d0D06aD) (live on Fuji)
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -47,265 +60,179 @@ A cocoa farmer in Lagos can go long COCOA before harvest to lock in a favorable 
 ├──────────────┬──────────────────────┬───────────────────┤
 │  TRADERS     │    CROPPERPS.SOL     │   CROPVAULT.SOL   │
 │              │                      │                   │
-│  Post USDT   │  • Open long/short   │  • LP pool        │
-│  collateral  │  • 1–10x leverage    │  • CROP-LP ERC20  │
-│              │  • PnL settlement    │  • Counterparty   │
-│  Get PnL     │  • Liquidations      │    to all trades  │
-│  in USDT     │                      │  • Fees → LPs     │
-└──────────────┴──────────┬───────────┴───────────────────┘
-                          │
-              ┌───────────▼───────────┐
-              │  COMMODITYORACLE.SOL  │
-              │  (Chainlink-compat.)  │
-              │  COCOA · PALMOIL     │
-              │  MAIZE  · SOYBEAN    │
-              └───────────────────────┘
+│  Post USDT   │  Open long/short     │  LP pool (USDT    │
+│  collateral  │  1-10x leverage      │    + AUSD)        │
+│              │  PnL settlement      │  CROP-LP ERC20    │
+│  Get PnL     │  Liquidations        │  Counterparty     │
+│  in USDT     │                      │  to all trades    │
+├──────────────┴──────────┬───────────┴───────────────────┤
+│              COMMODITYORACLE.SOL                        │
+│         Chainlink AggregatorV3Interface                 │
+│     COCOA  ·  PALMOIL  ·  MAIZE  ·  SOYBEAN           │
+│              + Live AVAX/USD Feed                       │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### Contracts
 
-| Contract | Role |
-|----------|------|
-| `CropPerps.sol` | Core trading engine — open, close, liquidate positions |
-| `CropVault.sol` | LP liquidity pool — USDT in, `CROP-LP` ERC20 out |
-| `CommodityOracle.sol` | Chainlink AggregatorV3Interface-compatible price feed |
-| `MockUSDT.sol` | Testnet USDT with public faucet (10,000 USDT per call) |
-| `MockAUSD.sol` | Testnet Agora AUSD with public faucet (10,000 AUSD per call) |
+| Contract | Purpose |
+|----------|---------|
+| **CropPerps.sol** | Core trading engine — open, close, liquidate positions with up to 10x leverage |
+| **CropVault.sol** | LP liquidity pool — accepts USDT + AUSD, issues CROP-LP ERC20 tokens |
+| **CommodityOracle.sol** | Chainlink-compatible oracle with live AVAX/USD feed + commodity prices |
+| **MockUSDT.sol** | Testnet USDT (6 decimals) with public faucet |
+| **MockAUSD.sol** | Testnet Agora AUSD (18 decimals) with public faucet |
 
 ### Trading Mechanics
 
-- **Collateral:** USDT (6 decimals, matching Tether WDK standard)
-- **Leverage:** 1x to 10x
-- **Markets:** COCOA, PALM OIL, MAIZE, SOYBEAN ($/metric ton, 8 decimal prices)
-- **Minimum position:** 10 USDT collateral
-- **Open fee:** 0.10% of notional
-- **Close fee:** 0.10% of notional
-- **Borrow fee:** 0.01% of notional per hour (accrues on open positions)
-- **Liquidation threshold:** Position liquidated when remaining collateral < 10% of initial
-- **Liquidation reward:** 5% of collateral to the liquidator
+| Parameter | Value |
+|-----------|-------|
+| Collateral | USDT (6 decimals) |
+| Leverage | 1x to 10x |
+| Markets | COCOA, PALM OIL, MAIZE, SOYBEAN |
+| Prices | USD per metric ton (8 decimal precision) |
+| Minimum position | 10 USDT |
+| Open/Close fee | 0.10% of notional |
+| Borrow fee | 0.01% of notional per hour |
+| Liquidation threshold | Collateral < 10% of initial |
+| Liquidation reward | 5% of collateral to liquidator |
 
-### LP Vault Mechanics
+### LP Vault
 
-- Liquidity providers deposit USDT → receive `CROP-LP` ERC20 tokens
-- LP token price = Total USDT in vault / Total CROP-LP supply
-- Trading fees (open + close + borrow) flow into vault → LP value increases over time
-- Max vault utilization: 80% (20% always free to pay winning traders)
-- CROP-LP tokens are standard ERC20 — composable with any DeFi staking protocol
+- Deposit USDT or AUSD, receive **CROP-LP** ERC20 tokens
+- LP token price = Total vault assets / CROP-LP supply
+- All trading fees (open + close + borrow) flow into the vault — LP value grows over time
+- Max utilization: 80% (20% reserved for winning trader payouts)
+- CROP-LP is standard ERC20, composable with any DeFi protocol
 
 ---
 
-## 🔗 Partner Integrations
+## Partner Integrations
 
-### Chainlink — Live AVAX/USD Price Feed
+### Chainlink — Live Oracle Feed
 
-`CommodityOracle.sol` imports directly from `@chainlink/contracts` (official npm package) and stores the deployed Chainlink AVAX/USD feed address on-chain. The `getAVAXPrice()` function calls `latestRoundData()` on the real Chainlink contract deployed at:
+The `CommodityOracle` contract imports directly from `@chainlink/contracts` (official npm package) and calls `latestRoundData()` on the real Chainlink AVAX/USD price feed deployed on Fuji testnet. This is a genuine on-chain oracle call — not a mock.
 
-- **Fuji testnet:** `0x5498BB86BC934c8D34FDA08E81D444153d0D06aD`
-- **Avalanche mainnet:** `0x0A77230d17318075983913bC2145DB16C7366156`
+- **Fuji:** [`0x5498BB86BC934c8D34FDA08E81D444153d0D06aD`](https://testnet.snowtrace.io/address/0x5498BB86BC934c8D34FDA08E81D444153d0D06aD)
+- **Mainnet:** `0x0A77230d17318075983913bC2145DB16C7366156`
 
-This is a genuine on-chain call to a live Chainlink oracle — not a mock or a hand-written interface. The commodity prices (COCOA, PALMOIL, MAIZE, SOYBEAN) are updated by a keeper until Chainlink Functions commodity feeds are available on Avalanche. The oracle contract implements `AggregatorV3Interface` end-to-end, making it a drop-in swap for any future Chainlink commodity feed.
+The frontend displays the live Chainlink AVAX/USD price and shows commodity prices denominated in both USD and AVAX. Commodity prices are updated by a keeper bot with realistic random-walk volatility until Chainlink Functions commodity feeds are available on Avalanche. The oracle implements `AggregatorV3Interface`, making it a drop-in swap for future Chainlink commodity feeds.
 
 ### Agora — AUSD Dual Collateral
 
-`CropVault.sol` accepts both USDT and Agora's **AUSD** as liquidity. Agora is a Paradigm & Dragonfly-backed stablecoin with $20M+ minted on Avalanche, fully backed by cash and T-bills managed by VanEck.
+The vault accepts [Agora AUSD](https://agora.finance) alongside USDT as liquidity. Agora is backed by Paradigm and Dragonfly, with AUSD fully collateralized by cash and T-bills managed by VanEck.
 
-- `addLiquidity(amount)` — deposit USDT
-- `addLiquidityAUSD(amount)` — deposit AUSD (18 dec, normalized to 6 dec for LP math)
-- Both collaterals earn the same trading fees
-- Testnet: `MockAUSD.sol` | Mainnet: Agora AUSD contract (see [agora.finance](https://agora.finance))
+- `addLiquidity(amount)` — deposit USDT (6 decimals)
+- `addLiquidityAUSD(amount)` — deposit AUSD (18 decimals, normalized internally)
+- Both collateral types earn the same trading fees
 
-AUSD is live on Avalanche C-Chain. Using it as a second collateral option means African traders who hold AUSD (an increasingly common institutional stablecoin) can provide liquidity and trade without converting to USDT first.
+### Tether — USDT Settlement
 
-### Tether USDT — Primary Settlement Currency
-
-All positions are collateralized and settled in USDT. The real Tether USDT contract on Avalanche C-Chain (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`) is used on mainnet. `MockUSDT.sol` mirrors it exactly (6 decimals, same interface) for testnet.
+All positions are collateralized and settled in USDT. Mainnet uses the real Tether contract on Avalanche C-Chain (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`). `MockUSDT.sol` mirrors it exactly for testnet.
 
 ---
 
-## ⚡ Why Avalanche
+## Why Avalanche
 
-| Metric | Avalanche C-Chain | Ethereum Mainnet |
-|--------|------------------|-----------------|
+| Metric | Avalanche C-Chain | Ethereum |
+|--------|-------------------|----------|
 | Finality | ~1 second | ~12 seconds |
-| Gas per position open | ~$0.02 | $5–50 |
+| Gas per trade | ~$0.02 | $5-50 |
 | TPS | 4,500+ | ~15 |
-| EVM compatible | ✅ | ✅ |
 
-For a commodity trading platform targeting African mobile users on limited data plans, sub-second finality and $0.02 gas isn't a feature — it's the prerequisite. Users in Lagos, Accra, and Nairobi won't wait 12 seconds for a price confirmation or pay $30 gas on a $100 position.
+For commodity traders in Lagos, Accra, and Nairobi on mobile connections, sub-second finality and $0.02 gas is the prerequisite — not a feature.
 
 ---
 
-## 🚀 Getting Started Locally
+## Getting Started
 
 ### Prerequisites
 
-Make sure you have these installed:
-
 ```bash
-node --version   # Need v18+
-npm --version    # Need v9+
+node --version   # v18+
+npm --version    # v9+
 ```
 
-### Step 1 — Install
+### Install and Test
 
 ```bash
-unzip cropperps.zip
+git clone https://github.com/big14way/cropperps.git
 cd cropperps
 npm install
-```
 
-### Step 2 — Verify contracts compile & tests pass
+# Run all 27 tests (Hardhat)
+npx hardhat test
 
-```bash
+# Or run 25 offline tests (no network needed)
 node run-tests-native.js
 ```
 
-You should see **25 passed, 0 failed**. This runs without any network connection — it uses the solcjs compiler bundled in `node_modules`.
-
-### Step 3 — Configure environment
+### Deploy to Fuji
 
 ```bash
 cp .env.example .env
-```
+# Edit .env: add PRIVATE_KEY (testnet wallet only)
+# Get testnet AVAX from https://faucet.avax.network/
 
-Open `.env` and fill in:
-
-```env
-PRIVATE_KEY=your_wallet_private_key_here
-FUJI_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc
-```
-
-> ⚠️ **Never commit your .env file.** It's already in `.gitignore`.
-
-To export your private key from MetaMask: Account Details → Export Private Key. Use a **dedicated testnet wallet** — never your main wallet.
-
-### Step 4 — Get Fuji testnet AVAX
-
-Go to **https://faucet.avax.network/** and request AVAX to your wallet address. You need at least **0.5 AVAX** for contract deployments.
-
-Add Fuji to MetaMask manually if it's not there:
-
-| Field | Value |
-|-------|-------|
-| Network Name | Avalanche Fuji Testnet |
-| RPC URL | `https://api.avax-test.network/ext/bc/C/rpc` |
-| Chain ID | `43113` |
-| Symbol | `AVAX` |
-| Explorer | `https://testnet.snowtrace.io` |
-
-### Step 5 — Deploy to Fuji
-
-```bash
 npm run deploy:fuji
 ```
 
-This does everything in one command:
-1. Deploys `MockUSDT`
-2. Deploys `CommodityOracle` with initial prices
-3. Deploys `CropVault`
-4. Deploys `CropPerps`
-5. Links vault → perps (`setCropPerps`)
-6. Seeds 50,000 USDT initial liquidity
-7. **Auto-writes your contract addresses to `frontend/config.js`**
+The deploy script handles everything: deploys all 5 contracts, links them together, seeds 50,000 USDT initial liquidity, and auto-writes contract addresses to `frontend/config.js`.
 
-You'll see output like:
-```
-✅ MockUSDT deployed:        0xABC...
-✅ CommodityOracle deployed: 0xDEF...
-✅ CropVault deployed:       0x123...
-✅ CropPerps deployed:       0x456...
-✅ Vault → CropPerps linked
-✅ Seeded vault with 50,000 USDT
-📁 Saved to: deployments/avalanche-fuji.json
-🖥️  Frontend config updated: frontend/config.js
-```
+### Run the Price Keeper
 
-### Step 6 — Open the frontend
+The keeper simulates realistic commodity price movements (random walk with mean reversion) and updates prices on-chain every 2 minutes.
 
 ```bash
-# Just open the file directly in your browser
-open frontend/index.html          # macOS
-xdg-open frontend/index.html      # Linux
-# Or drag it into Chrome/Firefox
+npm run keeper
 ```
 
-Connect MetaMask to **Avalanche Fuji Testnet**, click **Faucet** to get test USDT, add some liquidity to the vault, then open a position.
-
----
-
-## 🌐 Vercel Deployment
-
-The frontend is a single HTML file with zero dependencies — no React, no build step. Deploying to Vercel takes 2 minutes.
-
-### Option A — Via Vercel CLI (fastest)
+Or run persistently with pm2:
 
 ```bash
-# Install Vercel CLI globally
-npm install -g vercel
+npm install -g pm2
+pm2 start ecosystem.config.js
+pm2 logs cropperps-keeper    # watch price updates
+pm2 status                   # check health
+```
 
-# From inside your cropperps folder
+### Launch Frontend
+
+Open `frontend/index.html` in any browser, or deploy to Vercel:
+
+```bash
 cd frontend
-vercel
-
-# Follow prompts:
-# Set up and deploy? Y
-# Which scope? (your account)
-# Link to existing project? N
-# Project name: cropperps
-# Directory: ./  (you're already in frontend/)
-# Override settings? N
+vercel --prod
 ```
 
-Your app is live at `https://cropperps-xyz.vercel.app` in ~30 seconds.
-
-### Option B — Via GitHub (recommended for ongoing updates)
-
-1. Push to GitHub:
-```bash
-git init
-git add .
-git commit -m "feat: initial CropPerps protocol"
-git remote add origin https://github.com/YOUR_USERNAME/cropperps
-git push -u origin main
-```
-
-2. Go to **vercel.com** → New Project → Import from GitHub → select `cropperps`
-
-3. Configure build settings:
-   - **Framework Preset:** `Other`
-   - **Root Directory:** `frontend`
-   - **Build Command:** *(leave empty — no build step)*
-   - **Output Directory:** `.` (dot, meaning the root of frontend/)
-
-4. Click **Deploy**
-
-### After deploying on Vercel, update `frontend/config.js`
-
-The deploy script already writes your contract addresses to `frontend/config.js`. If you redeploy contracts, run `npm run deploy:fuji` again — it overwrites `config.js` automatically. Then push to GitHub and Vercel auto-deploys.
+The frontend is a single HTML file — no build step, no framework dependencies.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 cropperps/
 ├── contracts/
-│   ├── CropPerps.sol          # Core trading engine
-│   ├── CropVault.sol          # LP vault (ERC20 CROP-LP)
-│   ├── CommodityOracle.sol    # Chainlink-compatible oracle
-│   ├── MockUSDT.sol           # Testnet USDT with faucet
-│   └── MockAUSD.sol           # Testnet Agora AUSD with faucet
+│   ├── CropPerps.sol            # Trading engine (open, close, liquidate)
+│   ├── CropVault.sol            # LP vault (USDT + AUSD → CROP-LP)
+│   ├── CommodityOracle.sol      # Chainlink-integrated price oracle
+│   ├── MockUSDT.sol             # Testnet USDT with faucet
+│   └── MockAUSD.sol             # Testnet AUSD with faucet
 ├── scripts/
-│   └── deploy.js              # Full deployment + auto config writer
+│   ├── deploy.js                # Full deployment + auto config writer
+│   └── keeper.js                # Price keeper bot (random walk simulation)
 ├── test/
-│   └── CropPerps.test.js      # Hardhat test suite
+│   └── CropPerps.test.js        # 27 Hardhat tests
 ├── frontend/
-│   ├── index.html             # Single-file trading UI
-│   ├── config.js              # Contract addresses (auto-generated)
-│   └── abis.js                # Contract ABIs
-├── deployments/               # Created after deploy (gitignored)
-│   └── avalanche-fuji.json    # Deployed addresses + metadata
-├── run-tests-native.js        # Offline test runner (25 tests)
+│   ├── index.html               # Trading UI
+│   ├── config.js                # Contract addresses (auto-generated)
+│   └── abis.js                  # Contract ABIs
+├── deployments/
+│   └── fuji.json                # Deployed addresses + metadata
+├── ecosystem.config.js          # PM2 config for persistent keeper
+├── run-tests-native.js          # Offline test runner (25 tests)
+├── compile-native.js            # Offline compiler
 ├── hardhat.config.js
 ├── package.json
 └── .env.example
@@ -313,33 +240,30 @@ cropperps/
 
 ---
 
-## ✅ Production Upgrade Checklist
+## Production Roadmap
 
-Before mainnet:
-
-- [ ] Swap `MockUSDT` for real USDT: `0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7` (Avalanche)
-- [ ] Set up Chainlink Functions consumer to auto-update commodity prices (5-min heartbeat)
-- [ ] Verify Chainlink AVAX/USD feed staleness check is active in production
-- [ ] Transfer oracle ownership to multisig (Gnosis Safe)
-- [ ] Verify real Agora AUSD contract address at agora.finance
-- [ ] Test addLiquidityAUSD() with real AUSD on mainnet
-- [ ] Run Slither static analysis: `slither .`
-- [ ] Get Certik or Code4rena audit before seeding significant TVL
-- [ ] Set up Chainlink Automation for hourly borrow fee accrual
-- [ ] Add position size limits per commodity to prevent oracle manipulation
+| Priority | Task |
+|----------|------|
+| P0 | Chainlink Functions consumer for automated commodity price feeds (5-min heartbeat) |
+| P0 | Swap MockUSDT for real Tether USDT (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`) |
+| P0 | Verify Agora AUSD mainnet contract integration |
+| P1 | Transfer oracle ownership to multisig (Gnosis Safe) |
+| P1 | Slither static analysis + Code4rena / Certik audit |
+| P1 | Chainlink Automation for borrow fee accrual |
+| P2 | Position size limits per commodity (oracle manipulation protection) |
+| P2 | Mobile-responsive frontend redesign |
+| P2 | Avalanche Subnet deployment for dedicated throughput |
 
 ---
 
-## 🙏 Acknowledgements
+## About
 
-Built by **Gwill** ([@your_twitter](https://twitter.com)) — blockchain engineer, Lagos Nigeria.
+Built by **Gwill** — blockchain engineer, Lagos, Nigeria.
 
 6x international hackathon winner across Hedera, Solana, Starknet, Flare, and Cronos ecosystems. Building trade finance and commodity infrastructure for African markets since 2022.
 
-**Partners:** Chainlink · Agora (AUSD) · Tether (USDT) · Avalanche
+**Integrations:** [Chainlink](https://chain.link) | [Agora (AUSD)](https://agora.finance) | [Tether (USDT)](https://tether.to) | [Avalanche](https://avax.network)
 
 ---
 
-## License
-
-MIT — Built for Avalanche Build Games 2026
+MIT License — Built for [Avalanche Build Games 2026](https://build.avax.network/build-games)
