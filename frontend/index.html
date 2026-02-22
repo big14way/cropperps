@@ -1021,6 +1021,7 @@
     <div class="wallet-status">
       <div class="wallet-addr" id="wallet-addr">Not Connected</div>
       <div class="wallet-bal" id="wallet-bal"></div>
+      <div class="wallet-bal" id="wallet-bal-ausd" style="color:var(--text-lo);"></div>
     </div>
     <button class="btn btn-ghost btn-sm" id="btn-faucet">USDT Faucet</button>
     <button class="btn btn-ghost btn-sm" id="btn-faucet-ausd">AUSD Faucet</button>
@@ -1574,6 +1575,16 @@ async function refreshWalletBalance() {
   const usdtFmt = formatUSDT(usdtBalance);
   document.getElementById('wallet-bal').textContent = '$' + usdtFmt + ' USDT';
   document.getElementById('max-collateral').textContent = usdtFmt;
+
+  // AUSD balance (18 decimals)
+  try {
+    const ausdBal = await contracts.ausd.balanceOf(account);
+    const ausdFmt = Number(ausdBal) / 1e18;
+    document.getElementById('wallet-bal-ausd').textContent = ausdFmt.toFixed(2) + ' AUSD';
+  } catch(e) {
+    document.getElementById('wallet-bal-ausd').textContent = '';
+  }
+
   checkApprovalNeeded();
 }
 
