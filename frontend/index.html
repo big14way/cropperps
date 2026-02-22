@@ -224,6 +224,7 @@
   .ticker-icon { font-size: 14px; }
   .ticker-symbol { font-weight: 600; color: var(--text-hi); font-size: 12px; }
   .ticker-price { font-size: 13px; color: var(--text-hi); font-weight: 500; }
+  .ticker-avax { font-size: 9px; color: var(--text-lo); }
   .ticker-change { font-size: 11px; }
   .ticker-change.up { color: var(--profit); }
   .ticker-change.down { color: var(--loss); }
@@ -783,19 +784,29 @@
     padding: 12px 16px;
     font-size: 12px;
     color: var(--text-hi);
-    min-width: 260px;
+    min-width: 280px;
+    max-width: 400px;
     animation: slide-in 0.25s ease;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   }
+  .toast a {
+    display: inline-block;
+    margin-top: 4px;
+    color: #93c5fd;
+    font-size: 11px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .toast a:hover { color: #bfdbfe; }
 
   .toast.success { border-left: 3px solid var(--profit); }
   .toast.error   { border-left: 3px solid var(--loss); }
   .toast.info    { border-left: 3px solid var(--amber); }
 
-  .toast-icon { font-size: 16px; }
+  .toast-icon { font-size: 16px; margin-top: 1px; }
 
   @keyframes slide-in {
     from { transform: translateX(100%); opacity: 0; }
@@ -1022,24 +1033,28 @@
     <span class="ticker-icon">🍫</span>
     <span class="ticker-symbol">COCOA</span>
     <span class="ticker-price" id="tick-price-0">$8,500.00</span>
+    <span class="ticker-avax" id="tick-avax-0"></span>
     <span class="ticker-change up" id="tick-change-0">—</span>
   </div>
   <div class="ticker-item" data-id="1">
     <span class="ticker-icon">🌴</span>
     <span class="ticker-symbol">PALMOIL</span>
     <span class="ticker-price" id="tick-price-1">$1,200.00</span>
+    <span class="ticker-avax" id="tick-avax-1"></span>
     <span class="ticker-change" id="tick-change-1">—</span>
   </div>
   <div class="ticker-item" data-id="2">
     <span class="ticker-icon">🌽</span>
     <span class="ticker-symbol">MAIZE</span>
     <span class="ticker-price" id="tick-price-2">$180.00</span>
+    <span class="ticker-avax" id="tick-avax-2"></span>
     <span class="ticker-change" id="tick-change-2">—</span>
   </div>
   <div class="ticker-item" data-id="3">
     <span class="ticker-icon">🫘</span>
     <span class="ticker-symbol">SOYBEAN</span>
     <span class="ticker-price" id="tick-price-3">$490.00</span>
+    <span class="ticker-avax" id="tick-avax-3"></span>
     <span class="ticker-change" id="tick-change-3">—</span>
   </div>
 </div>
@@ -1344,8 +1359,29 @@
 
       <div class="divider"></div>
 
+      <!-- Chainlink Live Feed Panel -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <span style="font-size:14px;">🔗</span>
+          <span style="font-size:11px;font-weight:600;color:var(--text-hi);">Chainlink Live Feed</span>
+          <span style="font-size:9px;color:var(--profit);background:rgba(0,255,127,0.1);padding:2px 6px;border-radius:4px;margin-left:auto;" id="cl-status">LIVE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+          <span style="font-size:10px;color:var(--text-lo);">AVAX / USD</span>
+          <span style="font-size:15px;font-weight:600;color:var(--text-hi);" id="cl-avax-price">--</span>
+        </div>
+        <div style="font-size:9px;color:var(--text-lo);margin-bottom:6px;" id="cl-updated">Last update: --</div>
+        <div style="font-size:9px;color:var(--text-lo);display:flex;justify-content:space-between;">
+          <span>Feed:</span>
+          <a id="cl-feed-link" href="#" target="_blank" rel="noopener" style="color:#93c5fd;text-decoration:underline;font-family:monospace;">--</a>
+        </div>
+        <div style="font-size:9px;color:var(--text-lo);display:flex;justify-content:space-between;margin-top:2px;">
+          <span>Oracle:</span>
+          <a id="cl-oracle-link" href="#" target="_blank" rel="noopener" style="color:#93c5fd;text-decoration:underline;font-family:monospace;">--</a>
+        </div>
+      </div>
+
       <div style="font-size:10px;color:var(--text-lo);line-height:1.8;">
-        🔗 Oracle: Chainlink AVAX/USD live feed (Fuji: 0x5498...6aD)<br>
         💵 Collateral: USDT (Tether) + AUSD (Agora Finance)<br>
         🏆 Built on Avalanche C-Chain<br>
         🌍 Solving Africa's $25B trade finance gap
@@ -1374,6 +1410,20 @@ let refreshInterval;
 
 const USDT_DEC = 6n;
 const PRICE_DEC = 8n;
+
+// ── Set Chainlink panel links from config ────────────────────
+(function initChainlinkPanel() {
+  const feedLink = document.getElementById('cl-feed-link');
+  const oracleLink = document.getElementById('cl-oracle-link');
+  if (feedLink) {
+    feedLink.href = NETWORK.explorer + '/address/' + CHAINLINK.AVAX_USD_FEED;
+    feedLink.textContent = CHAINLINK.AVAX_USD_FEED.slice(0,6) + '...' + CHAINLINK.AVAX_USD_FEED.slice(-4);
+  }
+  if (oracleLink) {
+    oracleLink.href = NETWORK.explorer + '/address/' + CONTRACTS.ORACLE;
+    oracleLink.textContent = CONTRACTS.ORACLE.slice(0,6) + '...' + CONTRACTS.ORACLE.slice(-4);
+  }
+})();
 
 // ════════════════════════════════════════════════════════════
 //                     WALLET CONNECTION
@@ -1444,16 +1494,40 @@ async function switchToFuji() {
 //                     DATA REFRESH
 // ════════════════════════════════════════════════════════════
 
+let avaxPriceUSD = 0; // Live Chainlink AVAX/USD price (8 decimals)
+
 async function refreshAll() {
   try {
     await Promise.all([
       refreshPrices(),
+      refreshChainlinkPrice(),
       refreshWalletBalance(),
       refreshVaultStats(),
       refreshPositions(),
     ]);
   } catch(e) {
     console.warn('Refresh error:', e);
+  }
+}
+
+async function refreshChainlinkPrice() {
+  try {
+    const [price, updatedAt] = await contracts.oracle.getAVAXPrice();
+    avaxPriceUSD = Number(price) / 1e8;
+
+    document.getElementById('cl-avax-price').textContent = '$' + avaxPriceUSD.toFixed(2);
+    document.getElementById('cl-status').textContent = 'LIVE';
+    document.getElementById('cl-status').style.color = 'var(--profit)';
+
+    const updatedDate = new Date(Number(updatedAt) * 1000);
+    const ago = Math.floor((Date.now() - updatedDate.getTime()) / 60000);
+    document.getElementById('cl-updated').textContent = `Last update: ${ago < 1 ? '<1' : ago} min ago`;
+  } catch(e) {
+    document.getElementById('cl-avax-price').textContent = 'unavailable';
+    document.getElementById('cl-status').textContent = 'ERROR';
+    document.getElementById('cl-status').style.color = 'var(--loss)';
+    document.getElementById('cl-updated').textContent = 'Feed may be stale or unreachable';
+    console.warn('Chainlink feed error:', e);
   }
 }
 
@@ -1470,6 +1544,13 @@ async function refreshPrices() {
     const priceUSD = formatPrice(prices[i]);
     document.getElementById(`tick-price-${i}`).textContent = '$' + priceUSD;
     document.getElementById(`cb-price-${i}`).textContent = '$' + priceUSD;
+
+    // Show AVAX-denominated price using live Chainlink rate
+    const avaxEl = document.getElementById(`tick-avax-${i}`);
+    if (avaxEl && avaxPriceUSD > 0) {
+      const priceInAvax = (Number(prices[i]) / 1e8) / avaxPriceUSD;
+      avaxEl.textContent = priceInAvax.toFixed(1) + ' AVAX';
+    }
 
     const changeEl = document.getElementById(`tick-change-${i}`);
     if (prevPrices[i] && prevPrices[i] !== 0n) {
@@ -1501,15 +1582,16 @@ async function refreshVaultStats() {
     const stats = await contracts.vault.getVaultStats();
     const fees  = await contracts.vault.totalFeesCollected();
 
+    // getVaultStats returns: [totalUSDT, ausdBalance, reservedAmount, freeLiquidity, utilizationBps, tokenPrice, totalLPSupply]
     document.getElementById('v-tvl').textContent       = '$' + formatUSDT(stats[0]);
-    document.getElementById('v-free').textContent      = '$' + formatUSDT(stats[2]);
+    document.getElementById('v-free').textContent      = '$' + formatUSDT(stats[3]);
     document.getElementById('v-fees').textContent      = '$' + formatUSDT(fees);
 
-    // LP token price: stats[4] is price in wei-equivalent (need to convert)
-    const lpPrice = Number(stats[4]) / 1e18;
+    // LP token price: stats[5] is price in wei-equivalent (need to convert)
+    const lpPrice = Number(stats[5]) / 1e18;
     document.getElementById('v-lp-price').textContent = '$' + lpPrice.toFixed(4);
 
-    const util = Number(stats[3]) / 100;
+    const util = Number(stats[4]) / 100;
     document.getElementById('v-util').textContent = util.toFixed(1) + '%';
     document.getElementById('v-util-bar').style.width = Math.min(util, 100) + '%';
 
@@ -1665,12 +1747,18 @@ async function openPosition() {
     return;
   }
 
-  // Check allowance
+  // Check allowance — approve first, then continue to open
   const perpsAllowance = await contracts.usdt.allowance(account, CONTRACTS.PERPS);
   if (perpsAllowance < collateral) {
-    toast('info', '🔑', 'Please approve USDT first');
-    await approveUSDT();
-    return;
+    toast('info', '🔑', 'Approving USDT spend...');
+    try {
+      const approveTx = await contracts.usdt.approve(CONTRACTS.PERPS, ethers.MaxUint256);
+      await approveTx.wait();
+      toast('success', '✅', 'USDT approved! Opening position...');
+    } catch(e) {
+      toast('error', '❌', 'Approval failed: ' + (e.reason || e.message?.substring(0,50)));
+      return;
+    }
   }
 
   try {
@@ -1682,7 +1770,7 @@ async function openPosition() {
       leverage
     );
     const receipt = await tx.wait();
-    toast('success', '🚀', `Position opened! Tx: ${shortHash(receipt.hash)}`);
+    toast('success', '🚀', `Position opened! Tx: ${shortHash(receipt.hash)}`, receipt.hash);
     document.getElementById('collateral-input').value = '';
     await refreshAll();
   } catch(e) {
@@ -1701,7 +1789,7 @@ async function closePosition(positionId) {
 
     const tx = await contracts.perps.closePosition(positionId);
     const receipt = await tx.wait();
-    toast('success', '💰', `Position closed! Tx: ${shortHash(receipt.hash)}`);
+    toast('success', '💰', `Position closed! Tx: ${shortHash(receipt.hash)}`, receipt.hash);
     await refreshAll();
   } catch(e) {
     toast('error', '❌', 'Close failed: ' + (e.reason || e.message?.substring(0,60)));
@@ -1729,8 +1817,8 @@ async function addLiquidity() {
 
   try {
     const tx = await contracts.vault.addLiquidity(amount);
-    await tx.wait();
-    toast('success', '💧', `Added $${input} USDT to vault!`);
+    const receipt = await tx.wait();
+    toast('success', '💧', `Added $${input} USDT to vault!`, receipt.hash);
     document.getElementById('lp-deposit-input').value = '';
     await refreshAll();
   } catch(e) {
@@ -1753,8 +1841,8 @@ async function removeLiquidity() {
 
   try {
     const tx = await contracts.vault.removeLiquidity(amount);
-    await tx.wait();
-    toast('success', '💸', 'Liquidity withdrawn!');
+    const receipt = await tx.wait();
+    toast('success', '💸', 'Liquidity withdrawn!', receipt.hash);
     document.getElementById('lp-withdraw-input').value = '';
     await refreshAll();
   } catch(e) {
@@ -1778,8 +1866,8 @@ async function checkAndLiquidate() {
 
     resultEl.innerHTML = `<span style="color:var(--loss)">⚠ Position #${posId} is liquidatable! Submitting...</span>`;
     const tx = await contracts.perps.liquidatePosition(posId);
-    await tx.wait();
-    resultEl.innerHTML = `<span style="color:var(--profit)">💰 Liquidated! Reward sent to your wallet.</span>`;
+    const receipt = await tx.wait();
+    resultEl.innerHTML = `<span style="color:var(--profit)">💰 Liquidated! Reward sent to your wallet. <a href="${NETWORK.explorer}/tx/${receipt.hash}" target="_blank" style="color:#93c5fd;text-decoration:underline;">View on Snowtrace ↗</a></span>`;
     await refreshAll();
   } catch(e) {
     resultEl.innerHTML = `<span style="color:var(--loss)">Error: ${e.reason || e.message?.substring(0,60)}</span>`;
@@ -1795,8 +1883,8 @@ document.getElementById('btn-faucet').addEventListener('click', async () => {
   try {
     document.getElementById('btn-faucet').disabled = true;
     const tx = await contracts.usdt.faucet();
-    await tx.wait();
-    toast('success', '💵', 'Received 10,000 USDT from faucet!');
+    const receipt = await tx.wait();
+    toast('success', '💵', 'Received 10,000 USDT from faucet!', receipt.hash);
     await refreshWalletBalance();
   } catch(e) {
     const msg = e.reason || e.message || '';
@@ -1812,8 +1900,8 @@ document.getElementById('btn-faucet-ausd').addEventListener('click', async () =>
   try {
     document.getElementById('btn-faucet-ausd').disabled = true;
     const tx = await contracts.ausd.faucet();
-    await tx.wait();
-    toast('success', '💵', 'Received 10,000 AUSD from faucet!');
+    const receipt = await tx.wait();
+    toast('success', '💵', 'Received 10,000 AUSD from faucet!', receipt.hash);
     await refreshWalletBalance();
   } catch(e) {
     const msg = e.reason || e.message || '';
@@ -1965,18 +2053,24 @@ function shortHash(hash) {
 //                     TOAST SYSTEM
 // ════════════════════════════════════════════════════════════
 
-function toast(type, icon, message) {
+function toast(type, icon, message, txHash) {
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+  let linkHtml = '';
+  if (txHash) {
+    const explorerUrl = NETWORK.explorer + '/tx/' + txHash;
+    linkHtml = `<br><a href="${explorerUrl}" target="_blank" rel="noopener">View on Snowtrace ↗</a>`;
+  }
+  el.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}${linkHtml}</span>`;
   container.appendChild(el);
+  const timeout = txHash ? 10000 : 4000; // longer for tx toasts so user can click
   setTimeout(() => {
     el.style.opacity = '0';
     el.style.transform = 'translateX(100%)';
     el.style.transition = 'all 0.3s';
     setTimeout(() => el.remove(), 300);
-  }, 4000);
+  }, timeout);
 }
 
 function setLoading(btnId, loading, text) {
