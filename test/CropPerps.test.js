@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("CropPerps Protocol", function () {
-  let usdt, oracle, vault, cropPerps;
+  let usdt, ausd, oracle, vault, cropPerps;
   let owner, trader1, trader2, liquidator;
   const USDT_DECIMALS = 6;
   const PRICE_DECIMALS = 8;
@@ -25,13 +25,17 @@ describe("CropPerps Protocol", function () {
     const MockUSDT = await ethers.getContractFactory("MockUSDT");
     usdt = await MockUSDT.deploy();
 
-    // Deploy CommodityOracle
-    const CommodityOracle = await ethers.getContractFactory("CommodityOracle");
-    oracle = await CommodityOracle.deploy();
+    // Deploy MockAUSD
+    const MockAUSD = await ethers.getContractFactory("MockAUSD");
+    ausd = await MockAUSD.deploy();
 
-    // Deploy CropVault
+    // Deploy CommodityOracle (use owner address as mock feed for local testing)
+    const CommodityOracle = await ethers.getContractFactory("CommodityOracle");
+    oracle = await CommodityOracle.deploy(owner.address);
+
+    // Deploy CropVault (dual collateral: USDT + AUSD)
     const CropVault = await ethers.getContractFactory("CropVault");
-    vault = await CropVault.deploy(await usdt.getAddress());
+    vault = await CropVault.deploy(await usdt.getAddress(), await ausd.getAddress());
 
     // Deploy CropPerps
     const CropPerps = await ethers.getContractFactory("CropPerps");

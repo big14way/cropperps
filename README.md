@@ -96,20 +96,29 @@ A cocoa farmer in Lagos can go long COCOA before harvest to lock in a favorable 
 
 ## 🔗 Partner Integrations
 
-### Chainlink
-`CommodityOracle.sol` implements the full `AggregatorV3Interface`. In production this contract is replaced by a **Chainlink Functions** consumer that:
-- Fetches COCOA prices from ICE Futures API every 5 minutes
-- Fetches PALM OIL from Bursa Malaysia Derivatives API
-- Fetches MAIZE and SOYBEAN from CBOT/CME Group API
-- Writes `latestRoundData()` on-chain via Chainlink DON
+### Chainlink — Live AVAX/USD Price Feed
 
-All price data flows through the same `getPrice(commodityId)` interface regardless of source — the trading engine never changes.
+`CommodityOracle.sol` imports directly from `@chainlink/contracts` (official npm package) and stores the deployed Chainlink AVAX/USD feed address on-chain. The `getAVAXPrice()` function calls `latestRoundData()` on the real Chainlink contract deployed at:
 
-### Tether USDT
-All positions use **USDT** as primary collateral and settlement currency. `MockUSDT.sol` mirrors real USDT exactly (6 decimals, same transfer interface). On mainnet, the contract address is swapped to the real Tether USDT on Avalanche C-Chain (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`).
+- **Fuji testnet:** `0x5498BB86BC934c8D34FDA08E81D444153d0D06aD`
+- **Avalanche mainnet:** `0x0A77230d17318075983913bC2145DB16C7366156`
 
-### Agora AUSD
-The vault accepts **Agora AUSD** as a second collateral option alongside USDT. AUSD is a fully-backed digital dollar by Agora Finance (backed by Paradigm & Dragonfly), with reserves managed by VanEck and custodied at State Street. AUSD deposits (18 decimals) are normalized to 6-decimal USDT equivalents for LP math. `MockAUSD.sol` is used on testnet; on mainnet, swap to the real Agora AUSD address on Avalanche.
+This is a genuine on-chain call to a live Chainlink oracle — not a mock or a hand-written interface. The commodity prices (COCOA, PALMOIL, MAIZE, SOYBEAN) are updated by a keeper until Chainlink Functions commodity feeds are available on Avalanche. The oracle contract implements `AggregatorV3Interface` end-to-end, making it a drop-in swap for any future Chainlink commodity feed.
+
+### Agora — AUSD Dual Collateral
+
+`CropVault.sol` accepts both USDT and Agora's **AUSD** as liquidity. Agora is a Paradigm & Dragonfly-backed stablecoin with $20M+ minted on Avalanche, fully backed by cash and T-bills managed by VanEck.
+
+- `addLiquidity(amount)` — deposit USDT
+- `addLiquidityAUSD(amount)` — deposit AUSD (18 dec, normalized to 6 dec for LP math)
+- Both collaterals earn the same trading fees
+- Testnet: `MockAUSD.sol` | Mainnet: Agora AUSD contract (see [agora.finance](https://agora.finance))
+
+AUSD is live on Avalanche C-Chain. Using it as a second collateral option means African traders who hold AUSD (an increasingly common institutional stablecoin) can provide liquidity and trade without converting to USDT first.
+
+### Tether USDT — Primary Settlement Currency
+
+All positions are collateralized and settled in USDT. The real Tether USDT contract on Avalanche C-Chain (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`) is used on mainnet. `MockUSDT.sol` mirrors it exactly (6 decimals, same interface) for testnet.
 
 ---
 
@@ -309,10 +318,11 @@ cropperps/
 Before mainnet:
 
 - [ ] Swap `MockUSDT` for real USDT: `0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7` (Avalanche)
-- [ ] Deploy Chainlink Functions consumer to replace manual oracle updates
-- [ ] Uncomment staleness check in `CommodityOracle.getPrice()` (2-hour threshold)
+- [ ] Set up Chainlink Functions consumer to auto-update commodity prices (5-min heartbeat)
+- [ ] Verify Chainlink AVAX/USD feed staleness check is active in production
 - [ ] Transfer oracle ownership to multisig (Gnosis Safe)
-- [ ] Swap `MockAUSD` for real Agora AUSD on Avalanche mainnet
+- [ ] Verify real Agora AUSD contract address at agora.finance
+- [ ] Test addLiquidityAUSD() with real AUSD on mainnet
 - [ ] Run Slither static analysis: `slither .`
 - [ ] Get Certik or Code4rena audit before seeding significant TVL
 - [ ] Set up Chainlink Automation for hourly borrow fee accrual
@@ -326,7 +336,7 @@ Built by **Gwill** ([@your_twitter](https://twitter.com)) — blockchain enginee
 
 6x international hackathon winner across Hedera, Solana, Starknet, Flare, and Cronos ecosystems. Building trade finance and commodity infrastructure for African markets since 2022.
 
-**Partners:** Chainlink · Tether · Agora AUSD · Avalanche
+**Partners:** Chainlink · Agora (AUSD) · Tether (USDT) · Avalanche
 
 ---
 

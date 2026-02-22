@@ -20,8 +20,8 @@ function findImports(importPath) {
 }
 
 const contractFiles = [
-  'contracts/interfaces/AggregatorV3Interface.sol',
   'contracts/MockUSDT.sol',
+  'contracts/MockAUSD.sol',
   'contracts/CommodityOracle.sol',
   'contracts/CropVault.sol',
   'contracts/CropPerps.sol',

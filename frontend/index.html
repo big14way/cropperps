@@ -1011,7 +1011,8 @@
       <div class="wallet-addr" id="wallet-addr">Not Connected</div>
       <div class="wallet-bal" id="wallet-bal"></div>
     </div>
-    <button class="btn btn-ghost btn-sm" id="btn-faucet">Faucet</button>
+    <button class="btn btn-ghost btn-sm" id="btn-faucet">USDT Faucet</button>
+    <button class="btn btn-ghost btn-sm" id="btn-faucet-ausd">AUSD Faucet</button>
   </div>
 </header>
 
@@ -1311,7 +1312,7 @@
           <button class="btn btn-ghost" onclick="removeLiquidity()">Remove</button>
         </div>
         <div style="font-size:10px;color:var(--text-lo);margin-top:4px;">
-          💡 Stake CROP-LP on Suzaku to earn bonus SUZ rewards
+          💡 CROP-LP earns trading fees automatically — no staking required
         </div>
       </div>
 
@@ -1344,8 +1345,8 @@
       <div class="divider"></div>
 
       <div style="font-size:10px;color:var(--text-lo);line-height:1.8;">
-        🔗 Oracle: Chainlink Data Feeds (Avalanche)<br>
-        💵 Settlement: USDT (Tether WDK)<br>
+        🔗 Oracle: Chainlink AVAX/USD live feed (Fuji: 0x5498...6aD)<br>
+        💵 Collateral: USDT (Tether) + AUSD (Agora Finance)<br>
         🏆 Built on Avalanche C-Chain<br>
         🌍 Solving Africa's $25B trade finance gap
       </div>
@@ -1396,6 +1397,7 @@ async function connectWallet() {
 
     // Init contracts
     contracts.usdt   = new ethers.Contract(CONTRACTS.USDT,   ABIS.USDT,   signer);
+    contracts.ausd   = new ethers.Contract(CONTRACTS.AUSD,   ABIS.AUSD,   signer);
     contracts.oracle = new ethers.Contract(CONTRACTS.ORACLE, ABIS.ORACLE, signer);
     contracts.vault  = new ethers.Contract(CONTRACTS.VAULT,  ABIS.VAULT,  signer);
     contracts.perps  = new ethers.Contract(CONTRACTS.PERPS,  ABIS.PERPS,  signer);
@@ -1802,6 +1804,23 @@ document.getElementById('btn-faucet').addEventListener('click', async () => {
     else toast('error', '❌', 'Faucet failed: ' + msg.substring(0,50));
   } finally {
     document.getElementById('btn-faucet').disabled = false;
+  }
+});
+
+document.getElementById('btn-faucet-ausd').addEventListener('click', async () => {
+  if (!contracts.ausd) { toast('error', '⚠', 'Connect wallet first'); return; }
+  try {
+    document.getElementById('btn-faucet-ausd').disabled = true;
+    const tx = await contracts.ausd.faucet();
+    await tx.wait();
+    toast('success', '💵', 'Received 10,000 AUSD from faucet!');
+    await refreshWalletBalance();
+  } catch(e) {
+    const msg = e.reason || e.message || '';
+    if (msg.includes('cooldown')) toast('error', '⏱', 'AUSD faucet cooldown: wait 24 hours');
+    else toast('error', '❌', 'AUSD faucet failed: ' + msg.substring(0,50));
+  } finally {
+    document.getElementById('btn-faucet-ausd').disabled = false;
   }
 });
 

@@ -10,7 +10,7 @@ import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.so
  *
  * CHAINLINK INTEGRATION:
  * This contract uses the official Chainlink AggregatorV3Interface from
- * @chainlink/contracts. The AVAX/USD price feed is called live on-chain
+ * the chainlink/contracts npm package. The AVAX/USD price feed is called live on-chain
  * from the Chainlink-deployed contract on Avalanche Fuji testnet.
  *
  * - chainlinkAVAXFeed: Real Chainlink AVAX/USD feed (Fuji: 0x5498BB86BC934c8D34FDA08E81D444153d0D06aD)
