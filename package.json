@@ -1,0 +1,21 @@
+{
+  "name": "cropperps",
+  "version": "1.0.0",
+  "description": "CropPerps - Decentralized Perpetuals DEX for African Agricultural Commodities on Avalanche",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:fuji": "npx hardhat run scripts/deploy.js --network fuji",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network localhost",
+    "node": "npx hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.0"
+  },
+  "dependencies": {
+    "@chainlink/contracts": "^1.2.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^17.3.1"
+  }
+}

@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CropPerps — African Commodity Perpetuals</title>
+
+  <!-- Fonts: Syne (display) + IBM Plex Mono (terminal data) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="abis.js"></script>
+
+<style>
+  /* ══════════════════════════════════════
+     DESIGN: Dark commodity-terminal
+     Aesthetic: Bloomberg meets African market floor
+     Palette: Near-black bg, warm amber primary, 
+              lime green for profit, crimson for loss
+  ════════════════════════════════════════ */
+
+  :root {
+    --bg-deep:    #0A0B0D;
+    --bg-panel:   #111318;
+    --bg-card:    #161A22;
+    --bg-input:   #1C212C;
+    --border:     #252B37;
+    --border-lit: #334155;
+
+    --amber:      #F5A623;
+    --amber-dim:  #B5761A;
+    --amber-glow: rgba(245,166,35,0.12);
+
+    --profit:     #39D98A;
+    --profit-dim: #1A7A4A;
+    --loss:       #FF4D4D;
+    --loss-dim:   #8B1A1A;
+
+    --text-hi:    #F0F2F5;
+    --text-mid:   #8895AA;
+    --text-lo:    #4A5568;
+
+    --font-display: 'Syne', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text-hi);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,166,35,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,166,35,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,11,13,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--amber);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 14px;
+    color: #000;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-hi);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span { color: var(--amber); }
+
+  .tagline {
+    font-size: 10px;
+    color: var(--text-lo);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .network-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+
+  .network-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--profit);
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--amber);
+    color: #000;
+  }
+  .btn-primary:hover { background: #FFB940; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(245,166,35,0.3); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--amber);
+    border: 1px solid var(--amber-dim);
+  }
+  .btn-ghost:hover { background: var(--amber-glow); border-color: var(--amber); }
+
+  .btn-danger {
+    background: var(--loss-dim);
+    color: var(--loss);
+    border: 1px solid var(--loss);
+  }
+  .btn-danger:hover { background: var(--loss); color: #fff; }
+
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .btn-block { width: 100%; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* ── PRICE TICKER ── */
+  .ticker-bar {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 0 8px;
+    border-radius: 4px;
+    transition: background 0.1s;
+  }
+  .ticker-item:hover { background: var(--bg-card); }
+  .ticker-item.active { background: var(--amber-glow); }
+
+  .ticker-icon { font-size: 14px; }
+  .ticker-symbol { font-weight: 600; color: var(--text-hi); font-size: 12px; }
+  .ticker-price { font-size: 13px; color: var(--text-hi); font-weight: 500; }
+  .ticker-change { font-size: 11px; }
+  .ticker-change.up { color: var(--profit); }
+  .ticker-change.down { color: var(--loss); }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 340px 1fr 320px;
+    grid-template-rows: 1fr;
+    height: calc(100vh - 96px);
+    position: relative;
+    z-index: 1;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-lit) transparent;
+  }
+
+  .panel-right {
+    border-right: none;
+    border-left: 1px solid var(--border);
+  }
+
+  .panel-center {
+    background: var(--bg-deep);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg-panel);
+    z-index: 10;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-mid);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* ── TRADING FORM ── */
+  .trading-form {
+    padding: 16px;
+  }
+
+  /* Commodity selector */
+  .commodity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .commodity-btn {
+    padding: 8px 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+  }
+
+  .commodity-btn:hover { border-color: var(--border-lit); background: var(--bg-card); }
+  .commodity-btn.selected { border-color: var(--amber); background: var(--amber-glow); }
+
+  .commodity-btn-icon { font-size: 16px; }
+  .commodity-btn-name { font-size: 11px; font-weight: 600; color: var(--text-hi); display: block; }
+  .commodity-btn-price { font-size: 10px; color: var(--text-mid); display: block; }
+
+  /* Direction toggle */
+  .direction-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .dir-btn {
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.12s;
+  }
+
+  .dir-btn-long {
+    background: var(--bg-input);
+    color: var(--text-mid);
+  }
+  .dir-btn-long.active { background: var(--profit); color: #000; }
+
+  .dir-btn-short {
+    background: var(--bg-input);
+    color: var(--text-mid);
+  }
+  .dir-btn-short.active { background: var(--loss); color: #fff; }
+
+  /* Form inputs */
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-label .hint { color: var(--amber); cursor: pointer; }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text-hi);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    transition: border-color 0.12s;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--amber); }
+  .form-input::placeholder { color: var(--text-lo); }
+
+  /* Leverage slider */
+  .leverage-slider {
+    position: relative;
+    padding-bottom: 20px;
+  }
+
+  .leverage-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .leverage-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.2);
+  }
+
+  .leverage-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .leverage-ticks span {
+    font-size: 10px;
+    color: var(--text-lo);
+    cursor: pointer;
+  }
+
+  .leverage-ticks span:hover { color: var(--amber); }
+
+  /* Order summary */
+  .order-summary {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+  }
+
+  .order-label { font-size: 11px; color: var(--text-mid); }
+  .order-value { font-size: 12px; color: var(--text-hi); font-weight: 500; }
+  .order-value.amber { color: var(--amber); }
+  .order-value.profit { color: var(--profit); }
+  .order-value.loss { color: var(--loss); }
+
+  .order-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+
+  /* ── VAULT PANEL ── */
+  .vault-stats {
+    padding: 16px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .stat-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-lo);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-hi);
+    font-family: var(--font-mono);
+  }
+
+  .stat-sub {
+    font-size: 10px;
+    color: var(--text-mid);
+    margin-top: 2px;
+  }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    background: var(--bg-input);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+    margin: 4px 0 8px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--amber-dim), var(--amber));
+    transition: width 0.5s ease;
+  }
+
+  /* LP input */
+  .lp-input-group {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  /* ── POSITIONS LIST ── */
+  .positions-list {
+    padding: 8px;
+  }
+
+  .position-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+    cursor: default;
+  }
+
+  .position-card:hover { border-color: var(--border-lit); }
+  .position-card.liquidatable { border-color: var(--loss); animation: blink-border 1s infinite; }
+
+  @keyframes blink-border {
+    0%, 100% { border-color: var(--loss); }
+    50% { border-color: var(--loss-dim); }
+  }
+
+  .pos-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .pos-direction {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pos-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .pos-badge-long { background: rgba(57,217,138,0.15); color: var(--profit); }
+  .pos-badge-short { background: rgba(255,77,77,0.15); color: var(--loss); }
+
+  .pos-commodity { font-size: 12px; font-weight: 600; color: var(--text-hi); }
+
+  .pos-pnl {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .pos-pnl.pos { color: var(--profit); }
+  .pos-pnl.neg { color: var(--loss); }
+
+  .pos-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .pos-detail { }
+  .pos-detail-label { font-size: 9px; color: var(--text-lo); text-transform: uppercase; }
+  .pos-detail-value { font-size: 11px; color: var(--text-mid); }
+
+  /* ── MARKET INFO (center) ── */
+  .market-info {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .market-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .market-icon {
+    font-size: 40px;
+    line-height: 1;
+  }
+
+  .market-name {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-hi);
+  }
+
+  .market-price {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-hi);
+    letter-spacing: -1px;
+  }
+
+  .market-unit {
+    font-size: 12px;
+    color: var(--text-mid);
+    margin-top: 2px;
+  }
+
+  .market-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .market-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .market-stat-label { font-size: 10px; color: var(--text-lo); text-transform: uppercase; margin-bottom: 4px; }
+  .market-stat-value { font-size: 14px; font-weight: 600; color: var(--text-hi); }
+
+  /* Open Interest bars */
+  .oi-section {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .oi-title {
+    font-size: 11px;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .oi-commodity {
+    margin-bottom: 10px;
+  }
+
+  .oi-commodity-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .oi-label { color: var(--text-mid); }
+  .oi-values { color: var(--text-mid); }
+
+  .oi-bar-wrap {
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .oi-bar-long {
+    background: var(--profit);
+    height: 100%;
+    transition: width 0.5s;
+  }
+
+  .oi-bar-short {
+    background: var(--loss);
+    height: 100%;
+    transition: width 0.5s;
+  }
+
+  /* Protocol info section */
+  .protocol-info {
+    padding: 16px 24px;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .info-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .info-box-title {
+    font-size: 10px;
+    color: var(--text-lo);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .info-box-value {
+    font-size: 13px;
+    color: var(--text-hi);
+    font-weight: 500;
+  }
+
+  .info-box-sub {
+    font-size: 10px;
+    color: var(--text-mid);
+    margin-top: 2px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 10px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-lo);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.12s;
+  }
+
+  .tab:hover { color: var(--text-mid); }
+  .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+  /* ── TOAST NOTIFICATIONS ── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text-hi);
+    min-width: 260px;
+    animation: slide-in 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .toast.success { border-left: 3px solid var(--profit); }
+  .toast.error   { border-left: 3px solid var(--loss); }
+  .toast.info    { border-left: 3px solid var(--amber); }
+
+  .toast-icon { font-size: 16px; }
+
+  @keyframes slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ── LOADING SPINNER ── */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border-lit);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-lo);
+    gap: 8px;
+  }
+
+  .empty-state-icon { font-size: 32px; opacity: 0.5; }
+  .empty-state-text { font-size: 12px; }
+
+  /* ── WALLET STATUS ── */
+  .wallet-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .wallet-addr {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-mid);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .wallet-bal {
+    font-size: 11px;
+    color: var(--amber);
+  }
+
+  /* ── MISC ── */
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+  .text-profit { color: var(--profit); }
+  .text-loss { color: var(--loss); }
+  .text-amber { color: var(--amber); }
+  .text-mid { color: var(--text-mid); }
+  .text-lo { color: var(--text-lo); }
+  .bold { font-weight: 600; }
+  .mt-8 { margin-top: 8px; }
+  .px-16 { padding: 0 16px; }
+  .p-16 { padding: 16px; }
+
+  /* ── CONNECT OVERLAY ── */
+  #connect-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,11,13,0.95);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    backdrop-filter: blur(8px);
+  }
+
+  .connect-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: 16px;
+    padding: 40px 48px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+  }
+
+  .connect-logo {
+    width: 64px; height: 64px;
+    background: var(--amber);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 28px;
+    color: #000;
+    margin: 0 auto 20px;
+  }
+
+  .connect-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 8px;
+  }
+
+  .connect-sub {
+    font-size: 12px;
+    color: var(--text-mid);
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+
+  .connect-features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .connect-feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+
+  .connect-feature-icon {
+    width: 24px; height: 24px;
+    background: var(--amber-glow);
+    border: 1px solid var(--amber-dim);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 2px; }
+
+  @media (max-width: 1024px) {
+    .layout { grid-template-columns: 300px 1fr; }
+    .panel-right { display: none; }
+  }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+    .panel { display: none; }
+    .panel-center { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Connect Overlay -->
+<div id="connect-overlay">
+  <div class="connect-card">
+    <div class="connect-logo">C</div>
+    <div class="connect-title">CropPerps</div>
+    <div class="connect-sub">
+      Decentralized perpetuals for African<br>agricultural commodities on Avalanche
+    </div>
+    <div class="connect-features">
+      <div class="connect-feature">
+        <div class="connect-feature-icon">🍫</div>
+        <span>Trade Cocoa, Palm Oil, Maize & Soybean</span>
+      </div>
+      <div class="connect-feature">
+        <div class="connect-feature-icon">⚡</div>
+        <span>Up to 10x leverage with USDT collateral</span>
+      </div>
+      <div class="connect-feature">
+        <div class="connect-feature-icon">🔗</div>
+        <span>Powered by Chainlink oracles on Avalanche</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="btn-connect" style="font-size:13px;padding:13px 0;">
+      Connect MetaMask
+    </button>
+    <div style="margin-top:12px;font-size:10px;color:var(--text-lo);">
+      Network: Avalanche Fuji Testnet (Chain ID: 43113)
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">C</div>
+    <div>
+      <div class="logo-text">Crop<span>Perps</span></div>
+      <div class="tagline">African Commodity Perpetuals</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="network-badge">
+      <div class="network-dot"></div>
+      <span id="network-name">Fuji Testnet</span>
+    </div>
+    <div class="wallet-status">
+      <div class="wallet-addr" id="wallet-addr">Not Connected</div>
+      <div class="wallet-bal" id="wallet-bal"></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btn-faucet">Faucet</button>
+  </div>
+</header>
+
+<!-- Ticker Bar -->
+<div class="ticker-bar" id="ticker-bar">
+  <div class="ticker-item active" data-id="0">
+    <span class="ticker-icon">🍫</span>
+    <span class="ticker-symbol">COCOA</span>
+    <span class="ticker-price" id="tick-price-0">$8,500.00</span>
+    <span class="ticker-change up" id="tick-change-0">—</span>
+  </div>
+  <div class="ticker-item" data-id="1">
+    <span class="ticker-icon">🌴</span>
+    <span class="ticker-symbol">PALMOIL</span>
+    <span class="ticker-price" id="tick-price-1">$1,200.00</span>
+    <span class="ticker-change" id="tick-change-1">—</span>
+  </div>
+  <div class="ticker-item" data-id="2">
+    <span class="ticker-icon">🌽</span>
+    <span class="ticker-symbol">MAIZE</span>
+    <span class="ticker-price" id="tick-price-2">$180.00</span>
+    <span class="ticker-change" id="tick-change-2">—</span>
+  </div>
+  <div class="ticker-item" data-id="3">
+    <span class="ticker-icon">🫘</span>
+    <span class="ticker-symbol">SOYBEAN</span>
+    <span class="ticker-price" id="tick-price-3">$490.00</span>
+    <span class="ticker-change" id="tick-change-3">—</span>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="layout">
+
+  <!-- LEFT: Trading Form -->
+  <div class="panel">
+    <div class="section-header">
+      <div class="section-title">New Position</div>
+    </div>
+
+    <div class="trading-form">
+      <!-- Commodity Selector -->
+      <div class="form-label">Select Market</div>
+      <div class="commodity-grid">
+        <button class="commodity-btn selected" data-id="0" onclick="selectCommodity(0)">
+          <span class="commodity-btn-icon">🍫</span>
+          <div>
+            <span class="commodity-btn-name">COCOA</span>
+            <span class="commodity-btn-price" id="cb-price-0">$8,500</span>
+          </div>
+        </button>
+        <button class="commodity-btn" data-id="1" onclick="selectCommodity(1)">
+          <span class="commodity-btn-icon">🌴</span>
+          <div>
+            <span class="commodity-btn-name">PALMOIL</span>
+            <span class="commodity-btn-price" id="cb-price-1">$1,200</span>
+          </div>
+        </button>
+        <button class="commodity-btn" data-id="2" onclick="selectCommodity(2)">
+          <span class="commodity-btn-icon">🌽</span>
+          <div>
+            <span class="commodity-btn-name">MAIZE</span>
+            <span class="commodity-btn-price" id="cb-price-2">$180</span>
+          </div>
+        </button>
+        <button class="commodity-btn" data-id="3" onclick="selectCommodity(3)">
+          <span class="commodity-btn-icon">🫘</span>
+          <div>
+            <span class="commodity-btn-name">SOYBEAN</span>
+            <span class="commodity-btn-price" id="cb-price-3">$490</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Long / Short -->
+      <div class="direction-toggle">
+        <button class="dir-btn dir-btn-long active" id="btn-long" onclick="setDirection(true)">
+          ▲ Long
+        </button>
+        <button class="dir-btn dir-btn-short" id="btn-short" onclick="setDirection(false)">
+          ▼ Short
+        </button>
+      </div>
+
+      <!-- Collateral -->
+      <div class="form-group">
+        <div class="form-label">
+          <span>Collateral (USDT)</span>
+          <span class="hint" onclick="setMaxCollateral()">MAX: <span id="max-collateral">—</span></span>
+        </div>
+        <input type="number" class="form-input" id="collateral-input"
+          placeholder="100" min="10" step="10"
+          oninput="updateOrderSummary()" />
+      </div>
+
+      <!-- Leverage -->
+      <div class="form-group">
+        <div class="leverage-display">
+          <div class="form-label" style="margin:0">Leverage</div>
+          <div class="leverage-value"><span id="leverage-display">5</span>x</div>
+        </div>
+        <div class="leverage-slider">
+          <input type="range" id="leverage-slider" min="1" max="10" value="5"
+            oninput="updateLeverage(this.value)" />
+          <div class="leverage-ticks">
+            <span onclick="setLeverage(1)">1x</span>
+            <span onclick="setLeverage(2)">2x</span>
+            <span onclick="setLeverage(5)">5x</span>
+            <span onclick="setLeverage(7)">7x</span>
+            <span onclick="setLeverage(10)">10x</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <div class="order-row">
+          <span class="order-label">Entry Price</span>
+          <span class="order-value" id="sum-entry">—</span>
+        </div>
+        <div class="order-row">
+          <span class="order-label">Position Size</span>
+          <span class="order-value amber" id="sum-size">—</span>
+        </div>
+        <div class="order-row">
+          <span class="order-label">Collateral</span>
+          <span class="order-value" id="sum-collateral">—</span>
+        </div>
+        <div class="order-divider"></div>
+        <div class="order-row">
+          <span class="order-label">Open Fee (0.1%)</span>
+          <span class="order-value" id="sum-fee">—</span>
+        </div>
+        <div class="order-row">
+          <span class="order-label">Liq. Price (est.)</span>
+          <span class="order-value loss" id="sum-liq">—</span>
+        </div>
+      </div>
+
+      <!-- Approve + Open -->
+      <button class="btn btn-primary btn-block" id="btn-approve" onclick="approveUSDT()" style="display:none;margin-bottom:8px;">
+        Approve USDT
+      </button>
+      <button class="btn btn-primary btn-block" id="btn-open" onclick="openPosition()">
+        <span id="btn-open-text">Open Position</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CENTER: Market Overview + Positions -->
+  <div class="panel-center">
+    <!-- Market Info -->
+    <div class="market-info">
+      <div class="market-header">
+        <div class="market-icon" id="market-icon">🍫</div>
+        <div>
+          <div class="market-name" id="market-name">Cocoa</div>
+          <div class="market-unit">USD per Metric Ton</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="market-price" id="market-price">$8,500.00</div>
+          <div class="text-mid" style="font-size:11px;" id="market-updated">Chainlink Oracle</div>
+        </div>
+      </div>
+      <div class="market-stats-row">
+        <div class="market-stat">
+          <div class="market-stat-label">Long OI</div>
+          <div class="market-stat-value text-profit" id="ms-long-oi">$0</div>
+        </div>
+        <div class="market-stat">
+          <div class="market-stat-label">Short OI</div>
+          <div class="market-stat-value text-loss" id="ms-short-oi">$0</div>
+        </div>
+        <div class="market-stat">
+          <div class="market-stat-label">Open Fee</div>
+          <div class="market-stat-value">0.10%</div>
+        </div>
+        <div class="market-stat">
+          <div class="market-stat-label">Max Leverage</div>
+          <div class="market-stat-value">10x</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Open Interest Bars -->
+    <div class="oi-section">
+      <div class="oi-title">Open Interest by Market</div>
+      <div id="oi-bars">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Positions Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('positions')">My Positions</div>
+      <div class="tab" onclick="showTab('liquidate')">Liquidate</div>
+    </div>
+
+    <!-- My Positions -->
+    <div id="tab-positions" class="positions-list">
+      <div class="empty-state" id="positions-empty">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">No open positions</div>
+      </div>
+      <div id="positions-container"></div>
+    </div>
+
+    <!-- Liquidate tab -->
+    <div id="tab-liquidate" class="positions-list" style="display:none">
+      <div class="p-16 text-mid" style="font-size:12px;line-height:1.8;">
+        Enter a position ID to check if it's eligible for liquidation and earn a 5% reward.
+      </div>
+      <div class="p-16" style="padding-top:0">
+        <div class="lp-input-group">
+          <input type="number" class="form-input" id="liq-pos-id" placeholder="Position ID" />
+          <button class="btn btn-danger" onclick="checkAndLiquidate()">Check & Liquidate</button>
+        </div>
+        <div id="liq-result" style="font-size:12px;color:var(--text-mid);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Vault / LP Panel -->
+  <div class="panel panel-right">
+    <div class="section-header">
+      <div class="section-title">Liquidity Vault</div>
+      <div style="font-size:10px;color:var(--text-lo);">CROP-LP</div>
+    </div>
+
+    <div class="vault-stats">
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-label">Total TVL</div>
+          <div class="stat-value" id="v-tvl">—</div>
+          <div class="stat-sub">USDT deposited</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Available</div>
+          <div class="stat-value" id="v-free">—</div>
+          <div class="stat-sub">for new positions</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">LP Token Price</div>
+          <div class="stat-value" id="v-lp-price">—</div>
+          <div class="stat-sub">per CROP-LP</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Fees Earned</div>
+          <div class="stat-value text-profit" id="v-fees">—</div>
+          <div class="stat-sub">total collected</div>
+        </div>
+      </div>
+
+      <!-- Utilization -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-mid);margin-bottom:4px;">
+          <span>Utilization</span>
+          <span id="v-util">0%</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="v-util-bar" style="width:0%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text-lo);">Max 80% — protects LP from insolvency</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Your LP -->
+      <div style="margin-bottom:12px;">
+        <div class="form-label" style="margin-bottom:8px;">Your LP Position</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-label">Your CROP-LP</div>
+            <div class="stat-value" id="v-my-lp">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">USDT Value</div>
+            <div class="stat-value text-amber" id="v-my-val">$0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deposit -->
+      <div class="form-group">
+        <div class="form-label">Add Liquidity</div>
+        <div class="lp-input-group">
+          <input type="number" class="form-input" id="lp-deposit-input" placeholder="USDT amount" min="10" step="100" />
+          <button class="btn btn-primary" onclick="addLiquidity()">Add</button>
+        </div>
+      </div>
+
+      <!-- Withdraw -->
+      <div class="form-group">
+        <div class="form-label">Remove Liquidity</div>
+        <div class="lp-input-group">
+          <input type="number" class="form-input" id="lp-withdraw-input" placeholder="CROP-LP amount" min="0" />
+          <button class="btn btn-ghost" onclick="removeLiquidity()">Remove</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-lo);margin-top:4px;">
+          💡 Stake CROP-LP on Suzaku to earn bonus SUZ rewards
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Protocol Info -->
+      <div class="info-grid">
+        <div class="info-box">
+          <div class="info-box-title">Open Fee</div>
+          <div class="info-box-value">0.10%</div>
+          <div class="info-box-sub">of position size</div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-title">Close Fee</div>
+          <div class="info-box-value">0.10%</div>
+          <div class="info-box-sub">of position size</div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-title">Borrow Fee</div>
+          <div class="info-box-value">0.01%/hr</div>
+          <div class="info-box-sub">per hour held</div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-title">Liq. Threshold</div>
+          <div class="info-box-value">90% loss</div>
+          <div class="info-box-sub">5% liq. reward</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:10px;color:var(--text-lo);line-height:1.8;">
+        🔗 Oracle: Chainlink Data Feeds (Avalanche)<br>
+        💵 Settlement: USDT (Tether WDK)<br>
+        🏆 Built on Avalanche C-Chain<br>
+        🌍 Solving Africa's $25B trade finance gap
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//                      APP STATE
+// ════════════════════════════════════════════════════════════
+
+let provider, signer, account;
+let contracts = {};
+let selectedCommodity = 0;
+let isLong = true;
+let prices = [0n, 0n, 0n, 0n];
+let usdtBalance = 0n;
+let allowance = 0n;
+let myLPBalance = 0n;
+let refreshInterval;
+
+const USDT_DEC = 6n;
+const PRICE_DEC = 8n;
+
+// ════════════════════════════════════════════════════════════
+//                     WALLET CONNECTION
+// ════════════════════════════════════════════════════════════
+
+document.getElementById('btn-connect').addEventListener('click', connectWallet);
+
+async function connectWallet() {
+  if (!window.ethereum) {
+    toast('error', '🦊', 'MetaMask not found. Please install it.');
+    return;
+  }
+
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    await switchToFuji();
+
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    account = await signer.getAddress();
+
+    // Init contracts
+    contracts.usdt   = new ethers.Contract(CONTRACTS.USDT,   ABIS.USDT,   signer);
+    contracts.oracle = new ethers.Contract(CONTRACTS.ORACLE, ABIS.ORACLE, signer);
+    contracts.vault  = new ethers.Contract(CONTRACTS.VAULT,  ABIS.VAULT,  signer);
+    contracts.perps  = new ethers.Contract(CONTRACTS.PERPS,  ABIS.PERPS,  signer);
+
+    document.getElementById('connect-overlay').style.display = 'none';
+    document.getElementById('wallet-addr').textContent = shortAddr(account);
+
+    await refreshAll();
+    refreshInterval = setInterval(refreshAll, 15000); // refresh every 15s
+
+    window.ethereum.on('accountsChanged', () => location.reload());
+    window.ethereum.on('chainChanged',    () => location.reload());
+
+    toast('success', '✅', 'Wallet connected!');
+  } catch(e) {
+    console.error(e);
+    toast('error', '❌', e.message?.substring(0,60) || 'Connection failed');
+  }
+}
+
+async function switchToFuji() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0xA869' }], // 43113 in hex
+    });
+  } catch (e) {
+    if (e.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0xA869',
+          chainName: 'Avalanche Fuji Testnet',
+          nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+          rpcUrls: ['https://api.avax-test.network/ext/bc/C/rpc'],
+          blockExplorerUrls: ['https://testnet.snowtrace.io'],
+        }],
+      });
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//                     DATA REFRESH
+// ════════════════════════════════════════════════════════════
+
+async function refreshAll() {
+  try {
+    await Promise.all([
+      refreshPrices(),
+      refreshWalletBalance(),
+      refreshVaultStats(),
+      refreshPositions(),
+    ]);
+  } catch(e) {
+    console.warn('Refresh error:', e);
+  }
+}
+
+async function refreshPrices() {
+  const prevPrices = [...prices];
+  for (let i = 0; i < 4; i++) {
+    try {
+      prices[i] = await contracts.oracle.getPrice(i);
+    } catch {}
+  }
+
+  // Update ticker
+  for (let i = 0; i < 4; i++) {
+    const priceUSD = formatPrice(prices[i]);
+    document.getElementById(`tick-price-${i}`).textContent = '$' + priceUSD;
+    document.getElementById(`cb-price-${i}`).textContent = '$' + priceUSD;
+
+    const changeEl = document.getElementById(`tick-change-${i}`);
+    if (prevPrices[i] && prevPrices[i] !== 0n) {
+      const delta = Number(prices[i] - prevPrices[i]) / Number(prevPrices[i]) * 100;
+      changeEl.textContent = (delta >= 0 ? '+' : '') + delta.toFixed(3) + '%';
+      changeEl.className = 'ticker-change ' + (delta >= 0 ? 'up' : 'down');
+    }
+  }
+
+  // Update market display
+  updateMarketDisplay();
+  updateOrderSummary();
+  renderOIBars();
+}
+
+async function refreshWalletBalance() {
+  if (!account) return;
+  usdtBalance = await contracts.usdt.balanceOf(account);
+  allowance   = await contracts.usdt.allowance(account, CONTRACTS.PERPS);
+
+  const usdtFmt = formatUSDT(usdtBalance);
+  document.getElementById('wallet-bal').textContent = '$' + usdtFmt + ' USDT';
+  document.getElementById('max-collateral').textContent = usdtFmt;
+  checkApprovalNeeded();
+}
+
+async function refreshVaultStats() {
+  try {
+    const stats = await contracts.vault.getVaultStats();
+    const fees  = await contracts.vault.totalFeesCollected();
+
+    document.getElementById('v-tvl').textContent       = '$' + formatUSDT(stats[0]);
+    document.getElementById('v-free').textContent      = '$' + formatUSDT(stats[2]);
+    document.getElementById('v-fees').textContent      = '$' + formatUSDT(fees);
+
+    // LP token price: stats[4] is price in wei-equivalent (need to convert)
+    const lpPrice = Number(stats[4]) / 1e18;
+    document.getElementById('v-lp-price').textContent = '$' + lpPrice.toFixed(4);
+
+    const util = Number(stats[3]) / 100;
+    document.getElementById('v-util').textContent = util.toFixed(1) + '%';
+    document.getElementById('v-util-bar').style.width = Math.min(util, 100) + '%';
+
+    // My LP
+    myLPBalance = await contracts.vault.balanceOf(account);
+    const myLPFmt = formatLP(myLPBalance);
+    const myVal = (Number(myLPBalance) / 1e18) * lpPrice;
+    document.getElementById('v-my-lp').textContent  = myLPFmt;
+    document.getElementById('v-my-val').textContent = '$' + myVal.toFixed(2);
+  } catch(e) { console.warn('vault stats error', e); }
+}
+
+async function refreshPositions() {
+  try {
+    const ids = await contracts.perps.getTraderPositions(account);
+    const container = document.getElementById('positions-container');
+    const empty = document.getElementById('positions-empty');
+
+    if (ids.length === 0) {
+      empty.style.display = 'flex';
+      container.innerHTML = '';
+      return;
+    }
+
+    empty.style.display = 'none';
+    const posDetails = await Promise.all(
+      ids.map(id => contracts.perps.getPositionDetails(id))
+    );
+
+    container.innerHTML = '';
+    for (let i = 0; i < ids.length; i++) {
+      const { pos, currentPrice, unrealizedPnL, accruedBorrowFee, isLiquidatable } = posDetails[i];
+      if (!pos.isOpen) continue;
+
+      const pnlNum = Number(unrealizedPnL) / 1e6;
+      const pnlPct = (pnlNum / Number(pos.collateral) * 1e6 * 100).toFixed(2);
+      const commodity = COMMODITIES[Number(pos.commodityId)];
+      const hoursOpen = Math.floor((Date.now()/1000 - Number(pos.openTimestamp)) / 3600);
+
+      const card = document.createElement('div');
+      card.className = 'position-card' + (isLiquidatable ? ' liquidatable' : '');
+      card.innerHTML = `
+        <div class="pos-header">
+          <div class="pos-direction">
+            <span class="pos-badge ${pos.isLong ? 'pos-badge-long' : 'pos-badge-short'}">
+              ${pos.isLong ? '▲ LONG' : '▼ SHORT'}
+            </span>
+            <span class="pos-commodity">${commodity.flag} ${commodity.name}</span>
+            ${isLiquidatable ? '<span style="color:var(--loss);font-size:10px;">⚠ NEAR LIQ</span>' : ''}
+          </div>
+          <div class="pos-pnl ${pnlNum >= 0 ? 'pos' : 'neg'}">
+            ${pnlNum >= 0 ? '+' : ''}${pnlNum.toFixed(2)} USDT
+            <span style="font-size:10px;">(${pnlPct}%)</span>
+          </div>
+        </div>
+        <div class="pos-details">
+          <div class="pos-detail">
+            <div class="pos-detail-label">Collateral</div>
+            <div class="pos-detail-value">$${formatUSDT(pos.collateral)}</div>
+          </div>
+          <div class="pos-detail">
+            <div class="pos-detail-label">Leverage</div>
+            <div class="pos-detail-value">${pos.leverage}x</div>
+          </div>
+          <div class="pos-detail">
+            <div class="pos-detail-label">Size</div>
+            <div class="pos-detail-value">$${formatUSDT(pos.sizeUSDT)}</div>
+          </div>
+          <div class="pos-detail">
+            <div class="pos-detail-label">Entry</div>
+            <div class="pos-detail-value">$${formatPrice(pos.entryPrice)}</div>
+          </div>
+          <div class="pos-detail">
+            <div class="pos-detail-label">Current</div>
+            <div class="pos-detail-value">$${formatPrice(currentPrice)}</div>
+          </div>
+          <div class="pos-detail">
+            <div class="pos-detail-label">Open (hrs)</div>
+            <div class="pos-detail-value">${hoursOpen}h</div>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="closePosition(${ids[i]})">
+          Close Position
+        </button>
+      `;
+      container.appendChild(card);
+    }
+  } catch(e) { console.warn('positions error', e); }
+}
+
+async function renderOIBars() {
+  const container = document.getElementById('oi-bars');
+  try {
+    let html = '';
+    for (let i = 0; i < 4; i++) {
+      const c = COMMODITIES[i];
+      const longOI  = await contracts.perps.openInterestLong(i);
+      const shortOI = await contracts.perps.openInterestShort(i);
+      const total = longOI + shortOI;
+      const longPct  = total > 0n ? Number(longOI * 100n / total) : 50;
+      const shortPct = total > 0n ? Number(shortOI * 100n / total) : 50;
+      html += `
+        <div class="oi-commodity">
+          <div class="oi-commodity-header">
+            <span class="oi-label">${c.flag} ${c.name}</span>
+            <span class="oi-values text-lo">
+              <span class="text-profit">L: $${formatUSDT(longOI)}</span>
+              &nbsp;/&nbsp;
+              <span class="text-loss">S: $${formatUSDT(shortOI)}</span>
+            </span>
+          </div>
+          <div class="oi-bar-wrap">
+            <div class="oi-bar-long" style="width:${longPct}%"></div>
+            <div class="oi-bar-short" style="width:${shortPct}%"></div>
+          </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+  } catch { container.innerHTML = '<div class="text-lo p-16">Loading...</div>'; }
+}
+
+// ════════════════════════════════════════════════════════════
+//                     TRADING ACTIONS
+// ════════════════════════════════════════════════════════════
+
+async function approveUSDT() {
+  try {
+    setLoading('btn-approve', true, 'Approving...');
+    const tx = await contracts.usdt.approve(CONTRACTS.PERPS, ethers.MaxUint256);
+    await tx.wait();
+    allowance = ethers.MaxUint256;
+    toast('success', '✅', 'USDT approved!');
+    checkApprovalNeeded();
+  } catch(e) {
+    toast('error', '❌', 'Approval failed: ' + (e.reason || e.message?.substring(0,50)));
+  } finally {
+    setLoading('btn-approve', false, 'Approve USDT');
+  }
+}
+
+async function openPosition() {
+  const collateralInput = document.getElementById('collateral-input').value;
+  if (!collateralInput || parseFloat(collateralInput) < 10) {
+    toast('error', '⚠', 'Minimum collateral is 10 USDT');
+    return;
+  }
+
+  const collateral = parseUnits(collateralInput, 6);
+  const leverage = parseInt(document.getElementById('leverage-slider').value);
+
+  if (collateral > usdtBalance) {
+    toast('error', '⚠', 'Insufficient USDT balance');
+    return;
+  }
+
+  // Check allowance
+  const perpsAllowance = await contracts.usdt.allowance(account, CONTRACTS.PERPS);
+  if (perpsAllowance < collateral) {
+    toast('info', '🔑', 'Please approve USDT first');
+    await approveUSDT();
+    return;
+  }
+
+  try {
+    setLoading('btn-open', true, 'Opening...');
+    const tx = await contracts.perps.openPosition(
+      selectedCommodity,
+      isLong,
+      collateral,
+      leverage
+    );
+    const receipt = await tx.wait();
+    toast('success', '🚀', `Position opened! Tx: ${shortHash(receipt.hash)}`);
+    document.getElementById('collateral-input').value = '';
+    await refreshAll();
+  } catch(e) {
+    const reason = e.reason || e.data?.message || e.message?.substring(0, 80);
+    toast('error', '❌', 'Failed: ' + reason);
+  } finally {
+    setLoading('btn-open', false, 'Open Position');
+  }
+}
+
+async function closePosition(positionId) {
+  try {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    const tx = await contracts.perps.closePosition(positionId);
+    const receipt = await tx.wait();
+    toast('success', '💰', `Position closed! Tx: ${shortHash(receipt.hash)}`);
+    await refreshAll();
+  } catch(e) {
+    toast('error', '❌', 'Close failed: ' + (e.reason || e.message?.substring(0,60)));
+    event.target.disabled = false;
+    event.target.textContent = 'Close Position';
+  }
+}
+
+async function addLiquidity() {
+  const input = document.getElementById('lp-deposit-input').value;
+  if (!input || parseFloat(input) < 10) {
+    toast('error', '⚠', 'Minimum deposit is 10 USDT');
+    return;
+  }
+
+  const amount = parseUnits(input, 6);
+
+  // Check allowance for vault
+  const vaultAllowance = await contracts.usdt.allowance(account, CONTRACTS.VAULT);
+  if (vaultAllowance < amount) {
+    toast('info', '🔑', 'Approving vault...');
+    const approveTx = await contracts.usdt.approve(CONTRACTS.VAULT, ethers.MaxUint256);
+    await approveTx.wait();
+  }
+
+  try {
+    const tx = await contracts.vault.addLiquidity(amount);
+    await tx.wait();
+    toast('success', '💧', `Added $${input} USDT to vault!`);
+    document.getElementById('lp-deposit-input').value = '';
+    await refreshAll();
+  } catch(e) {
+    toast('error', '❌', 'Deposit failed: ' + (e.reason || e.message?.substring(0,60)));
+  }
+}
+
+async function removeLiquidity() {
+  const input = document.getElementById('lp-withdraw-input').value;
+  if (!input || parseFloat(input) <= 0) {
+    toast('error', '⚠', 'Enter LP amount to withdraw');
+    return;
+  }
+
+  const amount = ethers.parseUnits(input, 18); // LP tokens are 18 dec
+  if (amount > myLPBalance) {
+    toast('error', '⚠', 'Insufficient CROP-LP balance');
+    return;
+  }
+
+  try {
+    const tx = await contracts.vault.removeLiquidity(amount);
+    await tx.wait();
+    toast('success', '💸', 'Liquidity withdrawn!');
+    document.getElementById('lp-withdraw-input').value = '';
+    await refreshAll();
+  } catch(e) {
+    toast('error', '❌', 'Withdraw failed: ' + (e.reason || e.message?.substring(0,60)));
+  }
+}
+
+async function checkAndLiquidate() {
+  const posId = document.getElementById('liq-pos-id').value;
+  if (!posId) return;
+
+  const resultEl = document.getElementById('liq-result');
+  resultEl.textContent = 'Checking...';
+
+  try {
+    const [isLiquidatable, remainingCol] = await contracts.perps.checkLiquidation(posId);
+    if (!isLiquidatable) {
+      resultEl.innerHTML = `<span style="color:var(--profit)">✅ Position #${posId} is healthy — not liquidatable</span>`;
+      return;
+    }
+
+    resultEl.innerHTML = `<span style="color:var(--loss)">⚠ Position #${posId} is liquidatable! Submitting...</span>`;
+    const tx = await contracts.perps.liquidatePosition(posId);
+    await tx.wait();
+    resultEl.innerHTML = `<span style="color:var(--profit)">💰 Liquidated! Reward sent to your wallet.</span>`;
+    await refreshAll();
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--loss)">Error: ${e.reason || e.message?.substring(0,60)}</span>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//                     FAUCET
+// ════════════════════════════════════════════════════════════
+
+document.getElementById('btn-faucet').addEventListener('click', async () => {
+  if (!contracts.usdt) { toast('error', '⚠', 'Connect wallet first'); return; }
+  try {
+    document.getElementById('btn-faucet').disabled = true;
+    const tx = await contracts.usdt.faucet();
+    await tx.wait();
+    toast('success', '💵', 'Received 10,000 USDT from faucet!');
+    await refreshWalletBalance();
+  } catch(e) {
+    const msg = e.reason || e.message || '';
+    if (msg.includes('cooldown')) toast('error', '⏱', 'Faucet cooldown: wait 24 hours');
+    else toast('error', '❌', 'Faucet failed: ' + msg.substring(0,50));
+  } finally {
+    document.getElementById('btn-faucet').disabled = false;
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+//                     UI HELPERS
+// ════════════════════════════════════════════════════════════
+
+function selectCommodity(id) {
+  selectedCommodity = id;
+  document.querySelectorAll('.commodity-btn').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.commodity-btn[data-id="${id}"]`).classList.add('selected');
+  document.querySelectorAll('.ticker-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.ticker-item[data-id="${id}"]`).classList.add('active');
+  updateMarketDisplay();
+  updateOrderSummary();
+}
+
+function setDirection(long) {
+  isLong = long;
+  document.getElementById('btn-long').classList.toggle('active', long);
+  document.getElementById('btn-short').classList.toggle('active', !long);
+  updateOrderSummary();
+}
+
+function updateLeverage(val) {
+  document.getElementById('leverage-display').textContent = val;
+  updateOrderSummary();
+}
+
+function setLeverage(val) {
+  document.getElementById('leverage-slider').value = val;
+  updateLeverage(val);
+}
+
+function setMaxCollateral() {
+  const maxUSDT = Number(usdtBalance) / 1e6;
+  document.getElementById('collateral-input').value = Math.floor(maxUSDT);
+  updateOrderSummary();
+}
+
+function updateOrderSummary() {
+  const collateralStr = document.getElementById('collateral-input').value || '0';
+  const collateral = parseFloat(collateralStr);
+  const leverage = parseInt(document.getElementById('leverage-slider').value);
+  const price = Number(prices[selectedCommodity]) / 1e8;
+
+  if (!collateral || !price) {
+    ['sum-entry','sum-size','sum-collateral','sum-fee','sum-liq'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
+  const positionSize = collateral * leverage;
+  const fee = positionSize * 0.001;
+  const netCollateral = collateral - fee;
+
+  // Liquidation price estimate: 90% of collateral lost
+  // Loss = positionSize * |price_change| / entryPrice = netCollateral * 0.9
+  // |price_change| / price = netCollateral * 0.9 / positionSize
+  const liqPct = (netCollateral * 0.9) / positionSize;
+  const liqPrice = isLong
+    ? price * (1 - liqPct)
+    : price * (1 + liqPct);
+
+  document.getElementById('sum-entry').textContent      = '$' + price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('sum-size').textContent       = '$' + positionSize.toFixed(2);
+  document.getElementById('sum-collateral').textContent = '$' + netCollateral.toFixed(2);
+  document.getElementById('sum-fee').textContent        = '$' + fee.toFixed(2);
+  document.getElementById('sum-liq').textContent        = '$' + liqPrice.toFixed(2);
+
+  checkApprovalNeeded();
+}
+
+function checkApprovalNeeded() {
+  const collateralStr = document.getElementById('collateral-input').value || '0';
+  const collateral = parseFloat(collateralStr);
+  if (!collateral || !account) {
+    document.getElementById('btn-approve').style.display = 'none';
+    return;
+  }
+
+  const collateralWei = BigInt(Math.floor(collateral * 1e6));
+  const perpsApproved = allowance >= collateralWei;
+  document.getElementById('btn-approve').style.display = perpsApproved ? 'none' : 'block';
+}
+
+function updateMarketDisplay() {
+  const c = COMMODITIES[selectedCommodity];
+  const price = prices[selectedCommodity];
+  document.getElementById('market-icon').textContent  = c.flag;
+  document.getElementById('market-name').textContent  = c.name;
+  document.getElementById('market-price').textContent = '$' + formatPrice(price);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', t.textContent.toLowerCase().includes(name.split('-')[0].substring(0,3)));
+  });
+  document.getElementById('tab-positions').style.display = name === 'positions' ? 'block' : 'none';
+  document.getElementById('tab-liquidate').style.display = name === 'liquidate' ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════════════════
+//                     FORMAT HELPERS
+// ════════════════════════════════════════════════════════════
+
+function formatUSDT(val) {
+  const num = Number(val) / 1e6;
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(2) + 'K';
+  return num.toFixed(2);
+}
+
+function formatLP(val) {
+  const num = Number(val) / 1e18;
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(4) + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(4) + 'K';
+  return num.toFixed(6);
+}
+
+function formatPrice(val) {
+  if (!val || val === 0n) return '—';
+  const num = Number(val) / 1e8;
+  if (num >= 1000) return num.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return num.toFixed(4);
+}
+
+function parseUnits(val, decimals) {
+  return BigInt(Math.floor(parseFloat(val) * Math.pow(10, decimals)));
+}
+
+function shortAddr(addr) {
+  return addr.slice(0,6) + '...' + addr.slice(-4);
+}
+
+function shortHash(hash) {
+  return hash.slice(0,10) + '...' + hash.slice(-6);
+}
+
+// ════════════════════════════════════════════════════════════
+//                     TOAST SYSTEM
+// ════════════════════════════════════════════════════════════
+
+function toast(type, icon, message) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    el.style.transition = 'all 0.3s';
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
+}
+
+function setLoading(btnId, loading, text) {
+  const btn = document.getElementById(btnId);
+  const textEl = document.getElementById(btnId + '-text') || btn;
+  btn.disabled = loading;
+  if (loading) {
+    btn.innerHTML = '<span class="spinner"></span> ' + text;
+  } else {
+    btn.innerHTML = text;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//                     TICKER CLICK
+// ════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.ticker-item').forEach(el => {
+  el.addEventListener('click', () => selectCommodity(parseInt(el.dataset.id)));
+});
+
+// Init leverage display
+updateLeverage(5);
+</script>
+</body>
+</html>
