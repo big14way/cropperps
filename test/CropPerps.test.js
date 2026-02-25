@@ -370,6 +370,39 @@ describe("CropPerps Protocol", function () {
         cropPerps.connect(liquidator).liquidatePosition(ids[0])
       ).to.be.revertedWith("CropPerps: Position not liquidatable");
     });
+
+    it("Should liquidate when vault has AUSD liquidity", async () => {
+      // Add AUSD liquidity to vault
+      const ausdAmount = ethers.parseUnits("50000", 18); // 50k AUSD
+      await ausd.transfer(trader2.address, ausdAmount);
+      await ausd.connect(trader2).approve(await vault.getAddress(), ethers.MaxUint256);
+      await vault.connect(trader2).addLiquidityAUSD(ausdAmount);
+
+      // Open 10x long position with trader1
+      await cropPerps.connect(trader1).openPosition(0, true, parseUSDT(1000), 10);
+      const ids = await cropPerps.getTraderPositions(trader1.address);
+      const posId = ids[ids.length - 1];
+
+      // Price crashes 12%: should be liquidatable
+      await oracle.updatePrice(0, BigInt("748000000000"));
+
+      const [isLiquidatable] = await cropPerps.checkLiquidation(posId);
+      expect(isLiquidatable).to.equal(true);
+
+      // Liquidator earns reward (paid in USDT from vault)
+      const liquidatorBefore = await usdt.balanceOf(liquidator.address);
+      await cropPerps.connect(liquidator).liquidatePosition(posId);
+      const liquidatorAfter = await usdt.balanceOf(liquidator.address);
+      expect(liquidatorAfter).to.be.gt(liquidatorBefore);
+
+      // Position closed
+      const pos = await cropPerps.positions(posId);
+      expect(pos.isOpen).to.equal(false);
+
+      // Vault still has AUSD balance (LP funds intact)
+      const ausdBalance = await ausd.balanceOf(await vault.getAddress());
+      expect(ausdBalance).to.be.gt(0);
+    });
   });
 
   // ═══════════════════════════════════════════════════════════

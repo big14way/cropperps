@@ -36,6 +36,9 @@ const BASE_PRICES = [
 // Max drift from base (percentage) — keeps prices realistic
 const MAX_DRIFT_PCT = 15; // ±15% from base
 
+// Max single-update change (sanity guard against bugs)
+const MAX_UPDATE_PCT = 10; // reject any single tick > ±10%
+
 // Per-update volatility (percentage of current price)
 // Scaled so ~2% daily vol with 2-min updates (~720 updates/day)
 // per-tick vol ≈ daily_vol / sqrt(720)
@@ -120,7 +123,8 @@ async function main() {
   while (true) {
     round++;
 
-    // Compute new prices
+    // Compute new prices with sanity check
+    const previousPrices = [...currentPrices];
     for (let i = 0; i < 4; i++) {
       currentPrices[i] = randomWalk(
         currentPrices[i],
@@ -128,6 +132,12 @@ async function main() {
         TICK_VOL[i],
         MAX_DRIFT_PCT
       );
+      // Sanity guard: reject any single tick > MAX_UPDATE_PCT
+      const changePct = Math.abs((currentPrices[i] - previousPrices[i]) / previousPrices[i]) * 100;
+      if (changePct > MAX_UPDATE_PCT) {
+        console.log(`[GUARD] ${NAMES[i]} change ${changePct.toFixed(2)}% exceeds ${MAX_UPDATE_PCT}% — clamped`);
+        currentPrices[i] = previousPrices[i]; // revert to previous
+      }
     }
 
     // Build int256[4] for updateAllPrices
