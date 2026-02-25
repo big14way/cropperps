@@ -140,6 +140,7 @@ contract CropVault is ERC20, ReentrancyGuard, Ownable {
         uint256 usdtOut = (lpAmount * totalAssets()) / totalSupply();
         require(usdtOut > 0, "Vault: Zero output");
         require(usdtOut <= totalAssets() - reservedUSDT, "Vault: Insufficient free liquidity");
+        require(usdtOut <= usdt.balanceOf(address(this)), "Vault: Insufficient USDT balance");
 
         _burn(msg.sender, lpAmount);
         usdt.safeTransfer(msg.sender, usdtOut);

@@ -1314,6 +1314,10 @@
       <!-- Deposit -->
       <div class="form-group">
         <div class="form-label">Add Liquidity</div>
+        <div style="display:flex;gap:4px;margin-bottom:6px;">
+          <button class="btn btn-sm" id="lp-token-usdt" onclick="setLPToken('USDT')" style="flex:1;background:var(--amber);color:#000;font-size:11px;padding:4px 8px;">USDT</button>
+          <button class="btn btn-sm" id="lp-token-ausd" onclick="setLPToken('AUSD')" style="flex:1;background:var(--bg-input);color:var(--text-mid);font-size:11px;padding:4px 8px;border:1px solid var(--border);">AUSD</button>
+        </div>
         <div class="lp-input-group">
           <input type="number" class="form-input" id="lp-deposit-input" placeholder="USDT amount" min="10" step="100" />
           <button class="btn btn-primary" onclick="addLiquidity()">Add</button>
@@ -1680,6 +1684,10 @@ async function refreshPositions() {
             <div class="pos-detail-value">$${formatPrice(currentPrice)}</div>
           </div>
           <div class="pos-detail">
+            <div class="pos-detail-label">Borrow Fee</div>
+            <div class="pos-detail-value" style="color:var(--loss)">-$${formatUSDT(accruedBorrowFee)}</div>
+          </div>
+          <div class="pos-detail">
             <div class="pos-detail-label">Open (hrs)</div>
             <div class="pos-detail-value">${hoursOpen}h</div>
           </div>
@@ -1809,27 +1817,55 @@ async function closePosition(positionId) {
   }
 }
 
+let lpDepositToken = 'USDT';
+
+function setLPToken(token) {
+  lpDepositToken = token;
+  const usdtBtn = document.getElementById('lp-token-usdt');
+  const ausdBtn = document.getElementById('lp-token-ausd');
+  const input = document.getElementById('lp-deposit-input');
+  if (token === 'USDT') {
+    usdtBtn.style.background = 'var(--amber)'; usdtBtn.style.color = '#000';
+    ausdBtn.style.background = 'var(--bg-input)'; ausdBtn.style.color = 'var(--text-mid)';
+    input.placeholder = 'USDT amount';
+  } else {
+    ausdBtn.style.background = 'var(--amber)'; ausdBtn.style.color = '#000';
+    usdtBtn.style.background = 'var(--bg-input)'; usdtBtn.style.color = 'var(--text-mid)';
+    input.placeholder = 'AUSD amount';
+  }
+}
+
 async function addLiquidity() {
   const input = document.getElementById('lp-deposit-input').value;
   if (!input || parseFloat(input) < 10) {
-    toast('error', '⚠', 'Minimum deposit is 10 USDT');
+    toast('error', '⚠', `Minimum deposit is 10 ${lpDepositToken}`);
     return;
   }
 
-  const amount = parseUnits(input, 6);
-
-  // Check allowance for vault
-  const vaultAllowance = await contracts.usdt.allowance(account, CONTRACTS.VAULT);
-  if (vaultAllowance < amount) {
-    toast('info', '🔑', 'Approving vault...');
-    const approveTx = await contracts.usdt.approve(CONTRACTS.VAULT, ethers.MaxUint256);
-    await approveTx.wait();
-  }
-
   try {
-    const tx = await contracts.vault.addLiquidity(amount);
-    const receipt = await tx.wait();
-    toast('success', '💧', `Added $${input} USDT to vault!`, receipt.hash);
+    if (lpDepositToken === 'AUSD') {
+      const amount = ethers.parseUnits(input, 18); // AUSD is 18 decimals
+      const ausdAllowance = await contracts.ausd.allowance(account, CONTRACTS.VAULT);
+      if (ausdAllowance < amount) {
+        toast('info', '🔑', 'Approving AUSD for vault...');
+        const approveTx = await contracts.ausd.approve(CONTRACTS.VAULT, ethers.MaxUint256);
+        await approveTx.wait();
+      }
+      const tx = await contracts.vault.addLiquidityAUSD(amount);
+      const receipt = await tx.wait();
+      toast('success', '💧', `Added ${input} AUSD to vault!`, receipt.hash);
+    } else {
+      const amount = parseUnits(input, 6);
+      const vaultAllowance = await contracts.usdt.allowance(account, CONTRACTS.VAULT);
+      if (vaultAllowance < amount) {
+        toast('info', '🔑', 'Approving USDT for vault...');
+        const approveTx = await contracts.usdt.approve(CONTRACTS.VAULT, ethers.MaxUint256);
+        await approveTx.wait();
+      }
+      const tx = await contracts.vault.addLiquidity(amount);
+      const receipt = await tx.wait();
+      toast('success', '💧', `Added $${input} USDT to vault!`, receipt.hash);
+    }
     document.getElementById('lp-deposit-input').value = '';
     await refreshAll();
   } catch(e) {
@@ -1875,7 +1911,9 @@ async function checkAndLiquidate() {
       return;
     }
 
-    resultEl.innerHTML = `<span style="color:var(--loss)">⚠ Position #${posId} is liquidatable! Submitting...</span>`;
+    const posDetails = await contracts.perps.getPositionDetails(posId);
+    const reward = Number(posDetails.pos.collateral) * 5 / 100;
+    resultEl.innerHTML = `<span style="color:var(--loss)">⚠ Position #${posId} is liquidatable! Reward: ~$${(reward/1e6).toFixed(2)} USDT. Submitting...</span>`;
     const tx = await contracts.perps.liquidatePosition(posId);
     const receipt = await tx.wait();
     resultEl.innerHTML = `<span style="color:var(--profit)">💰 Liquidated! Reward sent to your wallet. <a href="${NETWORK.explorer}/tx/${receipt.hash}" target="_blank" style="color:#93c5fd;text-decoration:underline;">View on Snowtrace ↗</a></span>`;

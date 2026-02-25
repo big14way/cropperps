@@ -136,8 +136,10 @@ contract CommodityOracle is Ownable {
     /// @notice Returns latest commodity price as uint256 for trading calculations
     function getPrice(uint8 commodityId) external view returns (uint256) {
         require(commodityId < COMMODITY_COUNT, "Oracle: Invalid commodity");
-        require(commodities[commodityId].price > 0, "Oracle: No valid price");
-        return uint256(commodities[commodityId].price);
+        CommodityPrice storage c = commodities[commodityId];
+        require(c.price > 0, "Oracle: No valid price");
+        require(block.timestamp - c.updatedAt <= MAX_PRICE_AGE, "Oracle: Commodity price stale");
+        return uint256(c.price);
     }
 
     /// @notice Chainlink AggregatorV3Interface-compatible format for each commodity

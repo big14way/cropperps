@@ -123,6 +123,48 @@ describe("CropPerps Protocol", function () {
       ).to.be.revertedWith("Vault: Below minimum deposit");
     });
 
+    it("Should mint LP tokens when depositing AUSD", async () => {
+      const ausdAmount = ethers.parseUnits("10000", 18); // 10,000 AUSD (18 dec)
+      await ausd.transfer(trader1.address, ausdAmount);
+      await ausd.connect(trader1).approve(await vault.getAddress(), ethers.MaxUint256);
+
+      const lpBefore = await vault.balanceOf(trader1.address);
+      await vault.connect(trader1).addLiquidityAUSD(ausdAmount);
+      const lpAfter = await vault.balanceOf(trader1.address);
+
+      expect(lpAfter).to.be.gt(lpBefore);
+      // AUSD normalized to 6 dec = 10,000 USDT equivalent, total assets should increase
+      expect(await vault.totalAssets()).to.be.gt(parseUSDT(500_000));
+    });
+
+    it("Should reject AUSD deposits below minimum", async () => {
+      const tinyAmount = ethers.parseUnits("5", 18); // 5 AUSD < 10 min
+      await ausd.transfer(trader1.address, tinyAmount);
+      await ausd.connect(trader1).approve(await vault.getAddress(), ethers.MaxUint256);
+
+      await expect(
+        vault.connect(trader1).addLiquidityAUSD(tinyAmount)
+      ).to.be.revertedWith("Vault: AUSD below minimum deposit");
+    });
+
+    it("Should mix USDT and AUSD deposits in same vault", async () => {
+      // Deposit USDT from trader1
+      await vault.connect(trader1).addLiquidity(parseUSDT(10_000));
+
+      // Deposit AUSD from trader2
+      const ausdAmount = ethers.parseUnits("10000", 18);
+      await ausd.transfer(trader2.address, ausdAmount);
+      await ausd.connect(trader2).approve(await vault.getAddress(), ethers.MaxUint256);
+      await vault.connect(trader2).addLiquidityAUSD(ausdAmount);
+
+      // Both should have LP tokens
+      expect(await vault.balanceOf(trader1.address)).to.be.gt(0);
+      expect(await vault.balanceOf(trader2.address)).to.be.gt(0);
+
+      // Total assets = 500k seed + 10k USDT + 10k AUSD normalized = ~520k
+      expect(await vault.totalAssets()).to.be.gte(parseUSDT(520_000));
+    });
+
     it("Should prevent removing liquidity backing open positions", async () => {
       // Open a large position that uses most of the free capacity
       const collateral = parseUSDT(10_000);
