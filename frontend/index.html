@@ -1163,6 +1163,10 @@
           <span class="order-value" id="sum-fee">—</span>
         </div>
         <div class="order-row">
+          <span class="order-label">Borrow Fee/hr</span>
+          <span class="order-value" id="sum-borrow">—</span>
+        </div>
+        <div class="order-row">
           <span class="order-label">Liq. Price (est.)</span>
           <span class="order-value loss" id="sum-liq">—</span>
         </div>
@@ -1646,6 +1650,16 @@ async function refreshPositions() {
       const commodity = COMMODITIES[Number(pos.commodityId)];
       const hoursOpen = Math.floor((Date.now()/1000 - Number(pos.openTimestamp)) / 3600);
 
+      // Collateral health: remaining collateral as % of initial
+      const remainingCol = Number(pos.collateral) + Number(unrealizedPnL) - Number(accruedBorrowFee);
+      const healthPct = (remainingCol / Number(pos.collateral) * 100);
+      const isWarning = healthPct < 50 && !isLiquidatable;
+      const healthLabel = isLiquidatable
+        ? '<span style="color:var(--loss);font-size:10px;">LIQUIDATABLE</span>'
+        : isWarning
+        ? `<span style="color:#f59e0b;font-size:10px;">${healthPct.toFixed(0)}% health</span>`
+        : '';
+
       const card = document.createElement('div');
       card.className = 'position-card' + (isLiquidatable ? ' liquidatable' : '');
       card.innerHTML = `
@@ -1655,7 +1669,7 @@ async function refreshPositions() {
               ${pos.isLong ? '▲ LONG' : '▼ SHORT'}
             </span>
             <span class="pos-commodity">${commodity.flag} ${commodity.name}</span>
-            ${isLiquidatable ? '<span style="color:var(--loss);font-size:10px;">⚠ NEAR LIQ</span>' : ''}
+            ${healthLabel}
           </div>
           <div class="pos-pnl ${pnlNum >= 0 ? 'pos' : 'neg'}">
             ${pnlNum >= 0 ? '+' : ''}${pnlNum.toFixed(2)} USDT
@@ -1842,6 +1856,11 @@ async function addLiquidity() {
     return;
   }
 
+  const btn = document.querySelector('[onclick="addLiquidity()"]');
+  const btnText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Adding...';
+
   try {
     if (lpDepositToken === 'AUSD') {
       const amount = ethers.parseUnits(input, 18); // AUSD is 18 decimals
@@ -1870,6 +1889,9 @@ async function addLiquidity() {
     await refreshAll();
   } catch(e) {
     toast('error', '❌', 'Deposit failed: ' + (e.reason || e.message?.substring(0,60)));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = btnText;
   }
 }
 
@@ -1886,6 +1908,11 @@ async function removeLiquidity() {
     return;
   }
 
+  const btn = document.querySelector('[onclick="removeLiquidity()"]');
+  const btnText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Withdrawing...';
+
   try {
     const tx = await contracts.vault.removeLiquidity(amount);
     const receipt = await tx.wait();
@@ -1894,6 +1921,9 @@ async function removeLiquidity() {
     await refreshAll();
   } catch(e) {
     toast('error', '❌', 'Withdraw failed: ' + (e.reason || e.message?.substring(0,60)));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = btnText;
   }
 }
 
@@ -2005,7 +2035,7 @@ function updateOrderSummary() {
   const price = Number(prices[selectedCommodity]) / 1e8;
 
   if (!collateral || !price) {
-    ['sum-entry','sum-size','sum-collateral','sum-fee','sum-liq'].forEach(id => {
+    ['sum-entry','sum-size','sum-collateral','sum-fee','sum-borrow','sum-liq'].forEach(id => {
       document.getElementById(id).textContent = '—';
     });
     return;
@@ -2023,10 +2053,13 @@ function updateOrderSummary() {
     ? price * (1 - liqPct)
     : price * (1 + liqPct);
 
+  const borrowPerHour = positionSize * 0.0001; // 0.01% per hour
+
   document.getElementById('sum-entry').textContent      = '$' + price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('sum-size').textContent       = '$' + positionSize.toFixed(2);
   document.getElementById('sum-collateral').textContent = '$' + netCollateral.toFixed(2);
   document.getElementById('sum-fee').textContent        = '$' + fee.toFixed(2);
+  document.getElementById('sum-borrow').textContent     = '$' + borrowPerHour.toFixed(2);
   document.getElementById('sum-liq').textContent        = '$' + liqPrice.toFixed(2);
 
   checkApprovalNeeded();
