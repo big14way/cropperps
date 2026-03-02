@@ -959,15 +959,106 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 2px; }
 
+  /* ── MOBILE BOTTOM NAV ── */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    height: 56px;
+    padding: 0 8px;
+    align-items: center;
+    justify-content: space-around;
+  }
+
+  .mobile-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 16px;
+    border: none;
+    background: none;
+    color: var(--text-lo);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .mobile-nav-btn .nav-icon { font-size: 18px; }
+  .mobile-nav-btn.active { color: var(--amber); background: var(--amber-glow); }
+
   @media (max-width: 1024px) {
     .layout { grid-template-columns: 300px 1fr; }
     .panel-right { display: none; }
   }
 
-  @media (max-width: 680px) {
-    .layout { grid-template-columns: 1fr; }
-    .panel { display: none; }
-    .panel-center { display: flex; }
+  @media (max-width: 768px) {
+    .mobile-nav { display: flex; }
+    .layout {
+      grid-template-columns: 1fr;
+      height: calc(100vh - 96px - 56px); /* account for bottom nav */
+    }
+    .panel, .panel-center, .panel-right {
+      display: none !important;
+    }
+    .panel.mobile-active,
+    .panel-center.mobile-active,
+    .panel-right.mobile-active {
+      display: flex !important;
+      flex-direction: column;
+    }
+    .panel.mobile-active {
+      border-right: none;
+    }
+    .panel-right.mobile-active {
+      border-left: none;
+    }
+
+    /* Header: compact */
+    .header { padding: 0 12px; gap: 8px; }
+    .logo-text { font-size: 15px; }
+    .tagline { display: none; }
+    .header-right { gap: 6px; }
+    .network-badge { display: none; }
+    .wallet-bal, .wallet-bal#wallet-bal-ausd { font-size: 10px; }
+    #btn-faucet, #btn-faucet-ausd { font-size: 9px; padding: 4px 6px; }
+
+    /* Ticker: scrollable, smaller */
+    .ticker-bar { padding: 0 8px; gap: 16px; }
+    .ticker-symbol { font-size: 11px; }
+    .ticker-price { font-size: 12px; }
+    .ticker-avax { display: none; }
+
+    /* Trading form: no sticky headers on mobile */
+    .section-header { position: static; }
+
+    /* Market info: tighter */
+    .market-info { padding: 12px; }
+    .market-stats-row { gap: 8px; }
+
+    /* Positions: full width cards */
+    .position-card { margin: 8px; }
+    .pos-details { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 400px) {
+    .header { height: 48px; }
+    .logo-mark { width: 26px; height: 26px; font-size: 11px; }
+    .logo-text { font-size: 13px; }
+    #btn-faucet-ausd { display: none; }
+    .ticker-bar { height: 36px; }
+    .commodity-grid { gap: 4px; }
+    .commodity-btn { padding: 6px 8px; }
+    .pos-details { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
@@ -2179,6 +2270,54 @@ document.querySelectorAll('.ticker-item').forEach(el => {
 
 // Init leverage display
 updateLeverage(5);
+
+// ═══════════════════════════════════════════════
+//                MOBILE NAV
+// ═══════════════════════════════════════════════
+
+function switchMobileTab(tab) {
+  // Remove active from all panels
+  document.querySelector('.panel').classList.remove('mobile-active');
+  document.querySelector('.panel-center').classList.remove('mobile-active');
+  document.querySelector('.panel-right').classList.remove('mobile-active');
+
+  // Remove active from all nav buttons
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+
+  // Activate selected
+  if (tab === 'trade') {
+    document.querySelector('.panel').classList.add('mobile-active');
+    document.getElementById('mnav-trade').classList.add('active');
+  } else if (tab === 'market') {
+    document.querySelector('.panel-center').classList.add('mobile-active');
+    document.getElementById('mnav-market').classList.add('active');
+  } else if (tab === 'vault') {
+    document.querySelector('.panel-right').classList.add('mobile-active');
+    document.getElementById('mnav-vault').classList.add('active');
+  }
+}
+
+// Default to market view on mobile
+if (window.innerWidth <= 768) {
+  document.querySelector('.panel-center').classList.add('mobile-active');
+}
 </script>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-btn" id="mnav-trade" onclick="switchMobileTab('trade')">
+    <span class="nav-icon">📊</span>
+    <span>Trade</span>
+  </button>
+  <button class="mobile-nav-btn active" id="mnav-market" onclick="switchMobileTab('market')">
+    <span class="nav-icon">📈</span>
+    <span>Market</span>
+  </button>
+  <button class="mobile-nav-btn" id="mnav-vault" onclick="switchMobileTab('vault')">
+    <span class="nav-icon">🏦</span>
+    <span>Vault</span>
+  </button>
+</nav>
+
 </body>
 </html>
