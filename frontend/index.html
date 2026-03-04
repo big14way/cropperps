@@ -1525,6 +1525,37 @@ const PRICE_DEC = 8n;
   }
 })();
 
+// ── Load live prices before wallet connect (read-only) ────────
+let preloadInterval;
+(async function preloadPrices() {
+  async function fetchPrices() {
+    try {
+      const rpc = new ethers.JsonRpcProvider(NETWORK.rpc);
+      const oracleRO = new ethers.Contract(CONTRACTS.ORACLE, ABIS.ORACLE, rpc);
+      for (let i = 0; i < 4; i++) {
+        try {
+          const p = await oracleRO.getPrice(i);
+          prices[i] = p;
+          document.getElementById(`tick-price-${i}`).textContent = '$' + formatPrice(p);
+          document.getElementById(`cb-price-${i}`).textContent = '$' + formatPrice(p);
+        } catch {}
+      }
+      try {
+        const [avaxPrice] = await oracleRO.getAVAXPrice();
+        avaxPriceUSD = Number(avaxPrice) / 1e8;
+        document.getElementById('cl-avax-price').textContent = '$' + avaxPriceUSD.toFixed(2);
+        document.getElementById('cl-status').textContent = 'LIVE';
+      } catch {}
+    } catch(e) { console.warn('Preload prices error:', e); }
+  }
+  await fetchPrices();
+  // Keep refreshing every 15s until wallet connects
+  preloadInterval = setInterval(() => {
+    if (!account) fetchPrices();
+    else clearInterval(preloadInterval);
+  }, 15000);
+})();
+
 // ════════════════════════════════════════════════════════════
 //                     WALLET CONNECTION
 // ════════════════════════════════════════════════════════════
