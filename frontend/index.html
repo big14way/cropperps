@@ -1758,14 +1758,18 @@ async function refreshPositions() {
     }
 
     empty.style.display = 'none';
-    const posDetails = await Promise.all(
+    // Use Promise.allSettled so one failed position doesn't break all
+    const posResults = await Promise.allSettled(
       ids.map(id => contracts.perps.getPositionDetails(id))
     );
 
     container.innerHTML = '';
+    let openCount = 0;
     for (let i = 0; i < ids.length; i++) {
-      const { pos, currentPrice, unrealizedPnL, accruedBorrowFee, isLiquidatable } = posDetails[i];
+      if (posResults[i].status !== 'fulfilled') continue;
+      const { pos, currentPrice, unrealizedPnL, accruedBorrowFee, isLiquidatable } = posResults[i].value;
       if (!pos.isOpen) continue;
+      openCount++;
 
       const pnlNum = Number(unrealizedPnL) / 1e6;
       const pnlPct = (pnlNum / Number(pos.collateral) * 1e6 * 100).toFixed(2);
@@ -1781,6 +1785,8 @@ async function refreshPositions() {
         : isWarning
         ? `<span style="color:#f59e0b;font-size:10px;">${healthPct.toFixed(0)}% health</span>`
         : '';
+
+      const posLink = `${NETWORK.explorer}/address/${CONTRACTS.PERPS}`;
 
       const card = document.createElement('div');
       card.className = 'position-card' + (isLiquidatable ? ' liquidatable' : '');
@@ -1828,11 +1834,20 @@ async function refreshPositions() {
             <div class="pos-detail-value">${hoursOpen}h</div>
           </div>
         </div>
-        <button class="btn btn-danger btn-sm" onclick="closePosition(${ids[i]})">
-          Close Position
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-danger btn-sm" style="flex:1;" onclick="closePosition(${ids[i]})">
+            Close Position
+          </button>
+          <a href="${posLink}" target="_blank" rel="noopener"
+             style="font-size:10px;color:#93c5fd;text-decoration:underline;white-space:nowrap;">
+            View on Snowtrace
+          </a>
+        </div>
       `;
       container.appendChild(card);
+    }
+    if (openCount === 0) {
+      empty.style.display = 'flex';
     }
   } catch(e) { console.warn('positions error', e); }
 }
@@ -1928,6 +1943,8 @@ async function openPosition() {
     toast('success', '🚀', `Position opened! Tx: ${shortHash(receipt.hash)}`, receipt.hash);
     document.getElementById('collateral-input').value = '';
     await refreshAll();
+    // On mobile, switch to Market tab so user sees their positions
+    if (window.innerWidth <= 768) switchMobileTab('market');
   } catch(e) {
     const reason = e.reason || e.data?.message || e.message?.substring(0, 80);
     toast('error', '❌', 'Failed: ' + reason);
@@ -2267,17 +2284,25 @@ function toast(type, icon, message, txHash) {
   let linkHtml = '';
   if (txHash) {
     const explorerUrl = NETWORK.explorer + '/tx/' + txHash;
-    linkHtml = `<br><a href="${explorerUrl}" target="_blank" rel="noopener">View on Snowtrace ↗</a>`;
+    linkHtml = `<br><a href="${explorerUrl}" target="_blank" rel="noopener" style="color:#93c5fd;text-decoration:underline;">View on Snowtrace ↗</a>`;
   }
-  el.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}${linkHtml}</span>`;
+  // Tx toasts: add dismiss button, stay 30s; normal toasts: 4s auto-dismiss
+  const dismissHtml = txHash ? '<span class="toast-dismiss" style="cursor:pointer;margin-left:8px;opacity:0.7;font-size:14px;">✕</span>' : '';
+  el.innerHTML = `<span class="toast-icon">${icon}</span><span style="flex:1">${message}${linkHtml}</span>${dismissHtml}`;
   container.appendChild(el);
-  const timeout = txHash ? 10000 : 4000; // longer for tx toasts so user can click
-  setTimeout(() => {
+  function fadeOut() {
     el.style.opacity = '0';
     el.style.transform = 'translateX(100%)';
     el.style.transition = 'all 0.3s';
     setTimeout(() => el.remove(), 300);
-  }, timeout);
+  }
+  const timeout = txHash ? 30000 : 4000;
+  const timer = setTimeout(fadeOut, timeout);
+  // Allow clicking to dismiss tx toasts early
+  if (txHash) {
+    const dismissBtn = el.querySelector('.toast-dismiss');
+    if (dismissBtn) dismissBtn.addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(timer); fadeOut(); });
+  }
 }
 
 function setLoading(btnId, loading, text) {
