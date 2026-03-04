@@ -13,26 +13,142 @@
 
 ---
 
-## The Problem
+## The Problem: Africa's Commodity Producers Are Invisible to Global Finance
 
-Africa produces 75% of the world's cocoa and drives $400B+ in agricultural exports annually. Yet African commodity traders have **zero access to on-chain derivatives**.
+Africa feeds the world but cannot hedge, trade, or profit from the prices of what it grows.
 
-- **CME and ICE futures** require US/UK brokerage accounts, $10K+ minimums, and institutional clearinghouse access
-- **No on-chain price discovery** — a cocoa farmer in Nigeria cannot hedge harvest prices, short a glut, or speculate on the commodity they know best
-- **Zero DeFi commodity exposure** — you can trade BTC and ETH perps in seconds, but COCOA and PALM OIL don't exist anywhere on-chain
-- **Currency risk** compounds losses — Nigerian exporters invoice in USD but earn in NGN, losing 20-40% to FX slippage even when the trade is correct
+**The scale is staggering:**
 
-Africa's commodity producers are price-takers. CropPerps makes them price-setters.
+- Africa produces **75% of the world's cocoa**, **65% of the world's palm oil exports**, and over **200 million metric tons of maize and soybean annually** — yet not a single African commodity derivative exists on-chain
+- **33 million smallholder farming households** across West and East Africa grow these crops, supporting over **200 million people** directly
+- African farmers lose **20-40% of their crop value** to price volatility every year — they sell at harvest when prices are lowest because they have no tools to lock in better prices months ahead
+- The total **commodity trade finance gap in Sub-Saharan Africa is $120 billion** according to the African Development Bank — farmers, traders, and exporters cannot access the financial instruments that protect them
+
+**Why does this gap exist?**
+
+Traditional commodity derivatives (CME, ICE Futures) require US or UK brokerage accounts, $10,000+ minimum deposits, institutional clearinghouse membership, and KYC documentation that excludes most African participants. A cocoa farmer in Ondo State, Nigeria — whose family has grown cocoa for three generations — has **zero access** to the $12 trillion global derivatives market that prices the very crop in his backyard.
+
+**The human cost is real:**
+
+When cocoa prices crashed 30% in 2017, Nigerian cocoa farmers had no way to hedge. Thousands abandoned their farms. Communities that had grown cocoa for decades fell into poverty — not because they couldn't grow it, but because they couldn't manage the price risk. The same pattern repeats every few years across palm oil in Ghana, maize in Kenya, and soybean in Zambia.
+
+Meanwhile, a trader in Chicago can short cocoa futures in 3 clicks. The asymmetry is not just unfair — it's a structural failure that DeFi can fix.
+
+**Currency risk makes it worse:**
+
+Nigerian exporters invoice in USD but earn in Naira (NGN). With the Naira depreciating 40%+ in the last two years, even a profitable trade can become a loss after FX conversion. Stablecoin settlement eliminates this — traders keep their profits in USDT, immune to local currency devaluation.
+
+**Africa's commodity producers are price-takers. CropPerps makes them price-setters.**
 
 ---
 
-## The Solution
+## The Solution: Permissionless Commodity Derivatives on Avalanche
 
-**CropPerps** is a decentralized perpetuals exchange for African agricultural commodities on Avalanche.
+**CropPerps** is a decentralized perpetuals exchange purpose-built for African agricultural commodities on Avalanche C-Chain.
 
-Any wallet. No KYC. No minimum. Open a leveraged long or short on **COCOA, PALM OIL, MAIZE, or SOYBEAN** in one transaction, settled in USDT.
+Any wallet. No KYC. No minimum. Open a leveraged long or short on **COCOA, PALM OIL, MAIZE, or SOYBEAN** in one transaction, settled in USDT — at $0.02 gas cost on Avalanche.
 
-A cocoa farmer in Lagos hedges before harvest. A palm oil importer in Kano shorts to manage inventory risk. A trader in Accra speculates on commodity prices with real-world insight — the same tools Wall Street has had for 150 years, now permissionless on Avalanche at $0.02 gas.
+### Who Uses CropPerps
+
+| User | Action | Why |
+|------|--------|-----|
+| **Cocoa farmer in Ondo State** | Opens a SHORT before harvest season | Locks in today's price, protected if prices fall by harvest time |
+| **Palm oil importer in Kano** | Shorts palm oil while waiting for shipment | Hedges inventory risk — if prices fall, the short profit offsets the cargo loss |
+| **Commodity trader in Accra** | Goes LONG on maize after reading weather reports | Leverages local knowledge that international traders don't have |
+| **Diaspora investor in London** | Provides USDT liquidity to the vault | Earns trading fees from African commodity markets without direct exposure |
+| **DeFi yield farmer** | Deposits AUSD into the vault | Earns real yield from trading fees, not inflationary token rewards |
+
+### What Makes CropPerps Different
+
+1. **First mover** — No on-chain commodity derivatives exist for African agricultural products. Not on any chain.
+2. **Local knowledge advantage** — African traders understand cocoa seasons, palm oil supply disruptions, and maize harvest cycles better than any algorithmic fund. CropPerps gives them the tools to profit from that knowledge.
+3. **Stablecoin settlement** — All positions settle in USDT, eliminating the FX risk that destroys African commodity profits.
+4. **Micro-positions** — Minimum collateral is 10 USDT (~$10). A farmer can hedge $100 worth of crop for $0.02 gas. Traditional futures require $10,000+ minimum.
+5. **Dual stablecoin liquidity** — Vault accepts both Tether USDT and Agora AUSD, maximizing capital accessibility.
+
+---
+
+## Market Opportunity
+
+### Total Addressable Market
+
+| Market | Size | Source |
+|--------|------|--------|
+| Global commodity derivatives | **$12 trillion** annual notional | Bank for International Settlements |
+| African agricultural exports | **$400 billion** annually | African Union / FAO |
+| Sub-Saharan trade finance gap | **$120 billion** | African Development Bank |
+| DeFi perpetuals volume (2025) | **$2.5 trillion** annually | DefiLlama |
+| On-chain commodity derivatives | **$0** for African crops | — |
+
+### Serviceable Market
+
+CropPerps targets the intersection of:
+- **African commodity traders** seeking price hedging tools (est. 5-10M active traders across West/East Africa)
+- **DeFi users** seeking real-world yield from commodity trading fees
+- **Diaspora investors** looking for exposure to African commodity markets
+- **Institutional traders** who want programmatic access to African commodity prices
+
+### Why Now
+
+- **DeFi perpetuals are proven** — GMX, dYdX, and Hyperliquid have validated the on-chain perps model with billions in daily volume
+- **Stablecoin adoption in Africa is exploding** — Nigeria is the #2 country globally for P2P crypto trading volume (Chainalysis 2024)
+- **No competition** — Zero protocols offer African commodity derivatives. The market is entirely unserved.
+- **Avalanche infrastructure is ready** — Sub-second finality, $0.02 gas, Chainlink oracles, and C-Chain EVM compatibility make it the ideal deployment target
+
+---
+
+## Revenue Model
+
+CropPerps generates protocol revenue through trading fees that flow directly into the liquidity vault, increasing LP token value over time.
+
+### Fee Structure
+
+| Fee Type | Rate | When Charged | Flow |
+|----------|------|-------------|------|
+| **Opening fee** | 0.10% of notional | When position opens | → Vault (LP holders) |
+| **Closing fee** | 0.10% of notional | When position closes | → Vault (LP holders) |
+| **Borrow fee** | 0.01% of notional per hour | Accrues continuously, paid on close | → Vault (LP holders) |
+| **Liquidation penalty** | 5% of collateral | When position is liquidated | → Liquidator (5%) + Vault (remainder) |
+
+### Revenue Projections
+
+```
+Conservative scenario (Year 1 — testnet + early mainnet):
+  Daily volume: $500K across 4 markets
+  Daily fees:   $500K × 0.20% = $1,000/day
+  Annual:       $365,000
+
+Growth scenario (Year 2 — 8 markets, African adoption):
+  Daily volume: $5M across 8 markets
+  Daily fees:   $5M × 0.20% = $10,000/day
+  Annual:       $3,650,000
+
+Scale scenario (Year 3 — institutional + API access):
+  Daily volume: $50M across 12+ markets
+  Daily fees:   $50M × 0.20% = $100,000/day
+  Annual:       $36,500,000
+```
+
+### LP Yield Economics
+
+```
+Example: $500K vault TVL, 100 trades/day at $5K average size
+
+  Daily fee revenue = 100 × $5,000 × 0.20% = $1,000
+  Daily LP yield = $1,000 / $500,000 = 0.20%/day
+  Annualized = ~73% APY (real yield, not token emissions)
+```
+
+This is **real yield** — generated from actual trading activity, not inflationary token rewards. LP returns scale directly with trading volume.
+
+### Future Revenue Streams (Post-Mainnet)
+
+| Stream | Model | Timeline |
+|--------|-------|----------|
+| **Protocol fee share** | 10-20% of trading fees to protocol treasury / token holders | Phase 2 |
+| **Premium API access** | Institutional traders pay for low-latency order execution | Phase 3 |
+| **Cross-chain licensing** | Deploy CropPerps on other EVM chains, share fee revenue | Phase 3 |
+| **Data feeds** | Sell aggregated African commodity price data to TradFi institutions | Phase 4 |
 
 ---
 
@@ -133,21 +249,6 @@ LIQUIDATION:
 | **SafeERC20** | All token transfers use OpenZeppelin SafeERC20 |
 | **Withdrawal safety** | `removeLiquidity` checks both free liquidity AND actual USDT balance |
 | **Zero-price guard** | `require(price > 0)` on all oracle reads |
-
-### Fee Architecture
-
-All fees flow into the vault, increasing LP token value over time:
-
-```
-Trader opens $10,000 COCOA position at 5x leverage ($2,000 collateral):
-  Open fee:   $10,000 * 0.10% = $10.00  → vault
-  Borrow fee: $10,000 * 0.01%/hr = $1.00/hr → vault (on close)
-  Close fee:  $10,000 * 0.10% = $10.00  → vault (on close)
-
-LP earning example:
-  $500K vault TVL, 100 trades/day at $5K avg size:
-  Daily fees = 100 * $5,000 * 0.20% = $1,000 → 0.20% daily yield for LPs
-```
 
 ### Dual Collateral System
 
@@ -404,28 +505,74 @@ cropperps/
 
 ---
 
-## Production Roadmap
+## Roadmap
 
-| Priority | Task |
-|----------|------|
-| P0 | Chainlink Functions consumer for automated commodity price feeds (5-min heartbeat) |
-| P0 | Swap MockUSDT for real Tether USDT (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`) |
-| P0 | Verify Agora AUSD mainnet contract integration |
-| P1 | Transfer oracle ownership to multisig (Gnosis Safe) |
-| P1 | Slither static analysis + Code4rena / Certik audit |
-| P1 | Chainlink Automation for borrow fee accrual |
-| P2 | Position size limits per commodity (oracle manipulation protection) |
-| P2 | Avalanche Subnet deployment for dedicated throughput |
+### Phase 1: Foundation (Current — Q1 2026)
+
+- [x] Core smart contracts: CropPerps, CropVault, CommodityOracle
+- [x] 4 African commodity markets: COCOA, PALM OIL, MAIZE, SOYBEAN
+- [x] Chainlink AVAX/USD oracle integration (live on Fuji)
+- [x] Dual stablecoin vault (USDT + Agora AUSD)
+- [x] Mobile-responsive trading frontend
+- [x] Automated price keeper with realistic volatility simulation
+- [x] 31 passing tests across all critical paths
+- [x] Deployed and verified on Avalanche Fuji testnet
+- [x] Live at [cropperps.vercel.app](https://cropperps.vercel.app)
+
+### Phase 2: Mainnet Launch (Q2 2026)
+
+- [ ] Deploy to Avalanche C-Chain mainnet
+- [ ] Integrate real Tether USDT (`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`) and Agora AUSD
+- [ ] Chainlink Functions consumer for automated commodity price feeds (replacing keeper bot)
+- [ ] Chainlink Automation for borrow fee accrual
+- [ ] Security audit (Slither + professional audit)
+- [ ] Transfer oracle ownership to multisig (Gnosis Safe)
+- [ ] Community launch: onboard first 100 traders in Lagos and Accra
+
+### Phase 3: Growth (Q3–Q4 2026)
+
+- [ ] Expand to 8 markets: add COFFEE, RUBBER, CASHEW, SESAME
+- [ ] Governance token launch (CROP) — fee sharing with token holders
+- [ ] DAO governance for adding new commodity markets
+- [ ] API and SDK for institutional and algorithmic traders
+- [ ] Mobile app (React Native) for low-bandwidth African markets
+- [ ] Partnerships with African commodity exchanges (AFEX Nigeria, ECX Ethiopia)
+
+### Phase 4: Scale (2027+)
+
+- [ ] Avalanche Subnet deployment for dedicated throughput and custom gas token
+- [ ] Cross-chain deployment (Arbitrum, Base) with Chainlink CCIP bridging
+- [ ] Real-world oracle partnerships: integrate directly with AFEX, ECX, and NAMC for live African commodity prices
+- [ ] Structured products: commodity baskets, yield-bearing LP vaults, and auto-compounding strategies
+- [ ] Institutional API with compliance module for regulated funds
+- [ ] Target: 10,000+ active traders, $50M+ daily volume, 12+ commodity markets
 
 ---
 
-## About
+## Competitive Landscape
+
+| Protocol | Commodities | African Markets | Chain | Min. Position |
+|----------|------------|-----------------|-------|---------------|
+| **CropPerps** | **COCOA, PALM OIL, MAIZE, SOYBEAN** | **Yes — purpose-built** | **Avalanche** | **$10** |
+| GMX | BTC, ETH, AVAX, SOL | No | Arbitrum/Avalanche | ~$10 |
+| dYdX | BTC, ETH, 100+ crypto | No | dYdX Chain | ~$20 |
+| Hyperliquid | 100+ crypto pairs | No | Hyperliquid L1 | ~$10 |
+| Gains Network | Crypto, forex, stocks | No | Arbitrum/Polygon | ~$5 |
+| CME/ICE | All commodities | Requires US/UK account | TradFi | $10,000+ |
+
+**No existing protocol offers on-chain African commodity derivatives.** CropPerps has zero direct competitors in its target market.
+
+---
+
+## About the Builder
 
 Built by **Gwill** — blockchain engineer, Lagos, Nigeria.
 
 6x international hackathon winner across Hedera, Solana, Starknet, Flare, and Cronos ecosystems. Building trade finance and commodity infrastructure for African markets since 2022.
 
-**Integrations:** [Chainlink](https://chain.link) | [Agora (AUSD)](https://agora.finance) | [Tether (USDT)](https://tether.to) | [Avalanche](https://avax.network)
+CropPerps is born from firsthand experience: growing up in a cocoa-farming family in Nigeria and watching commodity price crashes devastate communities that had no tools to protect themselves. This isn't an abstract problem — it's personal.
+
+**Partner Integrations:** [Chainlink](https://chain.link) | [Agora (AUSD)](https://agora.finance) | [Tether (USDT)](https://tether.to) | [Avalanche](https://avax.network)
 
 ---
 
